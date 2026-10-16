@@ -1,0 +1,2809 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>XyroPlay</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',-apple-system,sans-serif; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+  body {
+    background:#0a0a0a;
+    color:#fff; overflow-x:hidden;
+    display:flex; flex-direction:column;
+  }
+
+  /* ============== AUTH ============== */
+  #authBox {
+    position:fixed; inset:0; z-index:500;
+    display:flex; align-items:center; justify-content:center;
+    background:#0a0a0a;
+    padding:20px;
+  }
+  .auth-card {
+    width:100%; max-width:400px;
+    padding:40px 28px 32px;
+    border-radius:22px;
+    background:#141414;
+    border:1px solid rgba(255,255,255,0.06);
+    box-shadow:0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02) inset;
+    animation:fadeIn .5s ease;
+  }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+
+  .auth-avatar {
+    width:88px; height:88px; border-radius:50%;
+    margin:0 auto 16px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 30px rgba(255,255,255,0.25);
+  }
+  .auth-avatar img {
+    width:80px; height:80px; border-radius:50%;
+    object-fit:cover;
+    border:2px solid rgba(255,255,255,0.15);
+    box-shadow:0 0 20px rgba(255,255,255,0.3);
+  }
+
+  .auth-title {
+    text-align:center; font-size:26px; font-weight:800;
+    letter-spacing:0.5px; margin-bottom:8px; color:#fff;
+  }
+  .auth-subtitle {
+    text-align:center; font-size:13px; color:#8a8a8a; margin-bottom:26px;
+  }
+
+  .tabs {
+    display:flex; padding:4px;
+    background:#0a0a0a;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:14px; margin-bottom:22px;
+  }
+  .tabs button {
+    flex:1; padding:11px;
+    background:transparent; border:none;
+    color:#8a8a8a; font-size:14px; font-weight:600;
+    cursor:pointer; transition:.25s; border-radius:10px;
+  }
+  .tabs button.active {
+    background:#fff; color:#000;
+    box-shadow:0 2px 10px rgba(255,255,255,0.15);
+  }
+
+  .input-label {
+    display:block; text-align:center;
+    font-size:10px; font-weight:700; letter-spacing:2px;
+    color:#8a8a8a; text-transform:uppercase; margin-bottom:8px;
+  }
+  .input-wrap { position:relative; margin-bottom:18px; }
+  .input-wrap input {
+    width:100%; padding:15px 18px;
+    background:#0a0a0a;
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:14px; color:#fff; font-size:14px;
+    outline:none; transition:.25s;
+  }
+  .input-wrap input::placeholder { color:#666; }
+  .input-wrap input:focus {
+    border-color:rgba(255,255,255,0.35);
+    background:#050505;
+  }
+  .input-wrap .eye-btn {
+    position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    width:36px; height:36px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:10px; color:#ccc; font-size:15px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:.2s;
+  }
+  .input-wrap .eye-btn:active { background:rgba(255,255,255,0.15); }
+
+  .btn-main {
+    width:100%; padding:16px; margin-top:6px;
+    background:#fff; color:#000;
+    border:none; border-radius:14px;
+    font-size:15px; font-weight:700;
+    cursor:pointer; transition:.25s; letter-spacing:0.3px;
+  }
+  .btn-main:hover { transform:scale(1.01); }
+  .btn-main:active { transform:scale(0.98); background:#e6e6e6; }
+
+  .auth-footer {
+    text-align:center; font-size:11.5px;
+    color:#6a6a6a; margin-top:20px; letter-spacing:0.2px;
+  }
+  .auth-footer b { color:#c8c8c8; font-weight:600; }
+
+  .form-section { display:none; }
+  .form-section.active { display:block; animation:fadeIn .3s ease; }
+  .msg { text-align:center; font-size:12.5px; margin-top:12px; min-height:18px; color:#ff5577; }
+
+  /* ============== VIDEO ============== */
+  #videoScreen {
+    position:fixed; inset:0; background:#000; display:none; z-index:999;
+  }
+  #videoScreen video {
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover; display:block;
+  }
+  #skipBtn {
+    position:absolute; bottom:40px; right:40px; z-index:1000;
+    padding:12px 28px;
+    border:1px solid rgba(255,255,255,0.5);
+    background:rgba(0,0,0,0.5);
+    color:#fff; border-radius:30px;
+    font-size:14px; cursor:pointer; letter-spacing:1px;
+    backdrop-filter:blur(6px); transition:.3s;
+  }
+  #skipBtn:hover { background:#c800ff; border-color:#c800ff; transform:scale(1.05); }
+
+  /* ============== APP ============== */
+  #app {
+    display:none; flex-direction:column;
+    height:100vh; max-width:520px; margin:0 auto; width:100%; position:relative;
+  }
+  #content {
+    flex:1; overflow-y:auto;
+    padding:16px 16px 100px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .page { display:none; animation:fadeIn .35s ease; }
+  .page.active { display:block; }
+
+  /* ============== HOME (UI BARU) ============== */
+  .hero-banner {
+    position:relative;
+    width:100%; height:170px;
+    border-radius:20px;
+    overflow:hidden;
+    margin-bottom:16px;
+    border:1px solid rgba(200,0,255,0.4);
+    box-shadow:0 0 30px rgba(200,0,255,0.35), inset 0 0 40px rgba(0,0,0,0.5);
+  }
+  .hero-banner img {
+    width:100%; height:100%;
+    object-fit:cover;
+    filter:brightness(0.75) contrast(1.05);
+    transition:transform .4s;
+  }
+  .hero-banner::after {
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, transparent 40%, rgba(10,0,20,0.85) 100%);
+    pointer-events:none;
+  }
+  .hero-badge {
+    position:absolute; top:12px; left:12px; z-index:2;
+    padding:5px 12px; border-radius:20px;
+    background:rgba(0,0,0,0.55);
+    border:1px solid rgba(255,255,255,0.15);
+    font-size:10.5px; font-weight:700;
+    letter-spacing:1.5px;
+    backdrop-filter:blur(6px);
+    display:flex; align-items:center; gap:5px;
+  }
+  .hero-badge .dot {
+    width:6px; height:6px; border-radius:50%;
+    background:#00ff88;
+    box-shadow:0 0 8px #00ff88;
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50% { opacity:0.5; transform:scale(1.2); }
+  }
+
+  .clock-wrap {
+    position:absolute; bottom:12px; left:16px; right:16px; z-index:2;
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap:10px;
+  }
+  .clock-left {
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .clock-time {
+    font-size:32px; font-weight:800;
+    letter-spacing:-0.5px;
+    line-height:1;
+    color:#fff;
+    text-shadow:0 2px 20px rgba(200,0,255,0.5);
+    font-variant-numeric:tabular-nums;
+  }
+  .clock-date {
+    font-size:11.5px; font-weight:500;
+    color:#d0c8e0;
+    letter-spacing:0.3px;
+  }
+  .clock-right {
+    text-align:right;
+    font-size:10px;
+    color:#a99cc0;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    font-weight:700;
+    line-height:1.6;
+  }
+
+  /* ---- User Card Baru ---- */
+  .user-card-v2 {
+    display:flex; align-items:center; gap:14px;
+    padding:14px 16px;
+    border-radius:18px;
+    background:
+      linear-gradient(135deg, rgba(40,0,70,0.85), rgba(20,0,40,0.85)),
+      radial-gradient(circle at 0% 0%, rgba(200,0,255,0.25), transparent 60%);
+    border:1px solid rgba(180,0,255,0.35);
+    box-shadow:0 8px 30px rgba(120,0,200,0.25), inset 0 1px 0 rgba(255,255,255,0.08);
+    margin-bottom:16px;
+    position:relative;
+    overflow:hidden;
+  }
+  .user-card-v2::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  }
+  .user-avatar-v2 {
+    width:50px; height:50px; border-radius:16px;
+    background:linear-gradient(135deg,#7a00ff,#00e5ff);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:20px;
+    flex-shrink:0;
+    box-shadow:0 4px 14px rgba(120,0,255,0.5);
+    position:relative;
+  }
+  .user-avatar-v2::after {
+    content:'';
+    position:absolute; bottom:-2px; right:-2px;
+    width:14px; height:14px; border-radius:50%;
+    background:#00ff88;
+    border:2px solid #0a0a14;
+    box-shadow:0 0 8px #00ff88;
+  }
+  .user-info-v2 { flex:1; min-width:0; }
+  .user-info-v2 h3 {
+    font-size:15px; font-weight:700;
+    margin-bottom:3px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .user-info-v2 .role {
+    display:inline-block;
+    font-size:9.5px; font-weight:700;
+    letter-spacing:1px;
+    padding:2px 8px;
+    border-radius:6px;
+    background:linear-gradient(90deg,#7a00ff,#c800ff);
+    text-transform:uppercase;
+  }
+
+  /* ---- Greeting Card ---- */
+  .greeting-card {
+    padding:18px 18px 16px;
+    border-radius:18px;
+    background:
+      linear-gradient(135deg, rgba(200,0,255,0.12), rgba(0,229,255,0.08)),
+      rgba(15,0,30,0.6);
+    border:1px solid rgba(200,0,255,0.3);
+    margin-bottom:16px;
+    position:relative;
+    overflow:hidden;
+  }
+  .greeting-card::before {
+    content:'';
+    position:absolute; top:-50%; right:-20%;
+    width:150px; height:150px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(200,0,255,0.35), transparent 70%);
+    pointer-events:none;
+  }
+  .greeting-card h2 {
+    font-size:19px; font-weight:700;
+    margin-bottom:6px;
+    background:linear-gradient(90deg,#c800ff,#00e5ff);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    position:relative; z-index:1;
+  }
+  .greeting-card p {
+    font-size:12.5px; color:#a99cc0;
+    line-height:1.5;
+    position:relative; z-index:1;
+  }
+
+  /* ---- Quick Stat Row ---- */
+  .stat-row {
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .stat-card {
+    padding:14px 12px;
+    border-radius:14px;
+    background:rgba(20,0,40,0.7);
+    border:1px solid rgba(180,0,255,0.25);
+    text-align:center;
+    transition:.25s;
+  }
+  .stat-card:active { transform:scale(0.97); border-color:#c800ff; }
+  .stat-card .emoji { font-size:22px; margin-bottom:6px; display:block; }
+  .stat-card .val { font-size:15px; font-weight:800; color:#fff; }
+  .stat-card .lbl {
+    font-size:9px; color:#8a7a9a;
+    letter-spacing:1px; text-transform:uppercase;
+    margin-top:2px;
+  }
+
+  /* ---- Section header ---- */
+  .sec-title {
+    font-size:12px; font-weight:700;
+    letter-spacing:1.5px; text-transform:uppercase;
+    color:#a99cc0;
+    margin:4px 0 10px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .sec-title::before {
+    content:''; width:3px; height:14px;
+    border-radius:2px;
+    background:linear-gradient(180deg,#c800ff,#00e5ff);
+  }
+
+  /* ---- Action grid (shortcut) ---- */
+  .action-grid {
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .action-tile {
+    padding:16px 14px;
+    border-radius:16px;
+    background:
+      linear-gradient(135deg, rgba(30,0,60,0.8), rgba(15,0,30,0.8));
+    border:1px solid rgba(180,0,255,0.3);
+    cursor:pointer;
+    transition:.25s;
+    position:relative;
+    overflow:hidden;
+  }
+  .action-tile:active {
+    transform:scale(0.97);
+    border-color:#c800ff;
+    box-shadow:0 0 20px rgba(200,0,255,0.4);
+  }
+  .action-tile .tile-emoji { font-size:24px; display:block; margin-bottom:8px; }
+  .action-tile .tile-name { font-size:13.5px; font-weight:700; margin-bottom:2px; }
+  .action-tile .tile-desc { font-size:10.5px; color:#8a7a9a; }
+
+  /* ---- Logout btn ---- */
+  .btn-logout {
+    width:100%; padding:13px; margin-top:6px;
+    border:1px solid rgba(255,0,102,0.4);
+    border-radius:14px;
+    background:linear-gradient(90deg, rgba(255,0,102,0.15), rgba(200,0,255,0.15));
+    color:#ff5577;
+    font-weight:700; font-size:13px;
+    cursor:pointer; transition:.3s; letter-spacing:0.5px;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn-logout:active { background:linear-gradient(90deg,#ff0066,#c800ff); color:#fff; transform:scale(0.98); }
+
+  /* ============== HALAMAN LAIN ============== */
+  .page-title {
+    font-size:18px; font-weight:600; margin-bottom:4px;
+    background:linear-gradient(90deg,#c800ff,#00e5ff);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .page-subtitle { font-size:12px; color:#888; margin-bottom:18px; }
+
+  .list { display:flex; flex-direction:column; gap:10px; }
+  .list-item {
+    padding:14px 16px; border-radius:12px;
+    background:rgba(20,0,40,0.7);
+    border:1px solid rgba(180,0,255,0.25);
+    cursor:pointer; transition:.25s;
+    display:flex; align-items:center; gap:12px;
+  }
+  .list-item:active {
+    border-color:#c800ff;
+    box-shadow:0 0 15px rgba(200,0,255,0.35);
+    transform:scale(0.98);
+  }
+  .list-item .ic { font-size:20px; width:26px; text-align:center; }
+  .list-item .t { font-size:14px; font-weight:600; }
+  .list-item .d { font-size:11px; color:#888; margin-top:2px; }
+
+  .tool-box {
+    padding:16px; border-radius:14px;
+    background:rgba(20,0,40,0.7);
+    border:1px solid rgba(180,0,255,0.3);
+    margin-bottom:14px;
+  }
+  .tool-box label { display:block; font-size:12px; color:#aaa; margin-bottom:6px; }
+  .tool-box input, .tool-box textarea {
+    width:100%; padding:11px 13px; border-radius:10px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(180,0,255,0.25);
+    color:#fff; outline:none; font-size:13px; margin-bottom:12px;
+    font-family:inherit; resize:vertical;
+  }
+  .tool-box input:focus, .tool-box textarea:focus { border-color:#c800ff; }
+  .btn-run {
+    width:100%; padding:11px; border:none; border-radius:10px;
+    background:linear-gradient(90deg,#7a00ff,#c800ff);
+    color:#fff; font-weight:600; font-size:14px;
+    cursor:pointer; transition:.3s;
+  }
+  .btn-run:hover { transform:scale(1.02); box-shadow:0 0 18px rgba(200,0,255,0.5); }
+  .btn-run:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+  .result-box {
+    padding:14px; border-radius:12px;
+    background:rgba(0,0,0,0.5);
+    border:1px solid rgba(180,0,255,0.3);
+    font-size:12.5px; line-height:1.5; color:#ddd;
+    white-space:pre-wrap; word-break:break-word;
+    max-height:520px; overflow-y:auto;
+  }
+  .result-box img { max-width:100%; border-radius:8px; margin-top:8px; display:block; }
+  .result-box a { color:#00e5ff; word-break:break-all; }
+  .result-box .loading { color:#c800ff; }
+
+  /* ---- Hasil gambar ---- */
+  .download-result { padding:4px 0; }
+  .download-result pre { white-space:pre-wrap; word-break:break-word; color:#ddd; }
+  .img-result { text-align:center; }
+  .img-result .img-title { color:#00e5ff; font-weight:600; margin-bottom:10px; }
+  .img-result img {
+    width:100%; max-height:650px; object-fit:contain;
+    border-radius:12px; background:#080808;
+    border:1px solid rgba(180,0,255,.3); margin:0;
+  }
+  .img-action-row { display:flex; gap:8px; margin-top:12px; }
+  .img-action-row a, .img-action-row button {
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    padding:11px 12px; border-radius:10px;
+    font-weight:600; font-size:13px;
+    text-decoration:none; cursor:pointer; transition:.25s;
+    border:none; font-family:inherit;
+  }
+  .btn-open { background:linear-gradient(90deg,#7a00ff,#c800ff); color:#fff; }
+  .btn-save { background:linear-gradient(90deg,#00c853,#00e5ff); color:#000; }
+  .btn-open:active, .btn-save:active { transform:scale(0.96); }
+  .btn-save:disabled { opacity:0.6; cursor:wait; }
+
+  .back-btn {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:7px 14px; border-radius:10px; margin-bottom:14px;
+    background:rgba(20,0,40,0.7);
+    border:1px solid rgba(180,0,255,0.3);
+    color:#fff; font-size:12px; cursor:pointer; transition:.3s;
+  }
+  .back-btn:active { border-color:#c800ff; background:rgba(200,0,255,0.15); }
+
+  .info-note {
+    padding:12px 14px; border-radius:12px;
+    background:rgba(0,229,255,0.08);
+    border:1px solid rgba(0,229,255,0.2);
+    color:#8eefff; font-size:12px; line-height:1.6;
+    margin-bottom:14px;
+  }
+
+    .info-note {
+    padding:12px 14px; border-radius:12px;
+    background:rgba(0,229,255,0.08);
+    border:1px solid rgba(0,229,255,0.3);
+    font-size:12px; line-height:1.5; color:#b0e8ff; margin-bottom:14px;
+  }
+  .info-note b { color:#00e5ff; }
+
+  /* ============== BOTTOM NAV ============== */
+  #bottomNav {
+    position:absolute; bottom:0; left:0; right:0;
+    display:flex; justify-content:space-around; align-items:center;
+    padding:8px 4px 10px;
+    background:rgba(10,0,20,0.92);
+    backdrop-filter:blur(14px);
+    border-top:1px solid rgba(180,0,255,0.25);
+    box-shadow:0 -4px 30px rgba(200,0,255,0.15);
+    z-index:50;
+  }
+  .nav-item {
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:6px 2px; cursor:pointer; color:#666;
+    transition:.25s; border-radius:10px; user-select:none;
+  }
+  .nav-item .nav-icon { font-size:20px; line-height:1; transition:.25s; }
+  .nav-item .nav-label { font-size:9.5px; font-weight:500; letter-spacing:0.3px; }
+  .nav-item.active { color:#fff; }
+  .nav-item.active .nav-icon {
+    filter:drop-shadow(0 0 8px #c800ff);
+    transform:translateY(-2px);
+  }
+  .nav-item.active .nav-label { color:#fff; font-weight:700; }
+</style>
+
+<style id="xyroplay-banner-fix">
+.hero-banner img { display:block; }
+.banner-fallback {
+  min-height:210px;
+  background-image:url('https://h.uguu.se/yTJtlSer.jpg');
+  background-size:cover;
+  background-position:center;
+}
+</style>
+
+<style id="xyroplay-tools-ui">
+  /* ============== TOOLS UI REFRESH ============== */
+  #page-tools .page-title{
+    margin-bottom:5px;
+    font-size:22px;
+    letter-spacing:-.3px;
+  }
+
+    #page-tools .page-title{
+    margin-bottom:5px;
+    font-size:22px;
+    letter-spacing:-.3px;
+  }
+  #page-tools .page-subtitle{
+    margin-bottom:14px;
+    color:#8f829d;
+  }
+  .tools-head{
+    position:relative;
+    padding:16px;
+    margin-bottom:14px;
+    border-radius:18px;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(200,0,255,.20), transparent 42%),
+      linear-gradient(135deg,rgba(30,0,55,.92),rgba(13,0,25,.92));
+    border:1px solid rgba(200,0,255,.28);
+    box-shadow:0 10px 30px rgba(90,0,150,.12);
+    overflow:hidden;
+  }
+  .tools-head::after{
+    content:"";
+    position:absolute;
+    width:110px;height:110px;
+    right:-48px;bottom:-60px;
+    border-radius:50%;
+    background:rgba(0,229,255,.08);
+    pointer-events:none;
+  }
+  .tools-head-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .tools-head-title{
+    font-size:14px;
+    font-weight:800;
+    color:#fff;
+  }
+  .tools-count{
+    flex-shrink:0;
+    padding:5px 9px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:800;
+    color:#dcbaff;
+    background:rgba(200,0,255,.12);
+    border:1px solid rgba(200,0,255,.25);
+  }
+  .tools-search{
+    position:relative;
+  }
+  .tools-search input{
+    width:100%;
+    height:44px;
+    padding:0 42px 0 42px;
+    border-radius:13px;
+    background:rgba(0,0,0,.28);
+    border:1px solid rgba(255,255,255,.09);
+    color:#fff;
+    outline:none;
+    font:500 13px inherit;
+    transition:.2s;
+  }
+  .tools-search input::placeholder{color:#716778}
+  .tools-search input:focus{
+    border-color:rgba(200,0,255,.55);
+    box-shadow:0 0 0 3px rgba(200,0,255,.08);
+  }
+  .tools-search .search-icon{
+    position:absolute;
+    left:14px; top:50%;
+    transform:translateY(-50%);
+    font-size:16px;
+    opacity:.8;
+    pointer-events:none;
+  }
+  .tools-search .clear-search{
+    position:absolute;
+    right:8px; top:50%;
+    transform:translateY(-50%);
+    width:30px;height:30px;
+    border:0;border-radius:9px;
+    background:rgba(255,255,255,.06);
+    color:#aaa;
+    display:none;
+    cursor:pointer;
+  }
+  .tools-filter{
+    display:flex;
+    gap:7px;
+    overflow-x:auto;
+    padding:1px 1px 3px;
+    margin:0 0 14px;
+    scrollbar-width:none;
+  }
+  .tools-filter::-webkit-scrollbar{display:none}
+  .tools-filter button{
+    flex:0 0 auto;
+    border:1px solid rgba(180,0,255,.22);
+    background:rgba(20,0,40,.62);
+    color:#9e92aa;
+    padding:7px 11px;
+    border-radius:999px;
+    font:700 10px inherit;
+    cursor:pointer;
+    transition:.2s;
+  }
+  .tools-filter button.active{
+    color:#fff;
+    border-color:rgba(200,0,255,.6);
+    background:linear-gradient(90deg,rgba(122,0,255,.55),rgba(200,0,255,.45));
+    box-shadow:0 4px 14px rgba(200,0,255,.16);
+  }
+  .tools-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+
+    .tools-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+  .tool-card{
+    position:relative;
+    padding:14px;
+    border-radius:16px;
+    background:linear-gradient(145deg,rgba(32,0,55,.88),rgba(14,0,27,.92));
+    border:1px solid rgba(180,0,255,.24);
+    cursor:pointer;
+    transition:transform .2s,border-color .2s,box-shadow .2s;
+    overflow:hidden;
+    min-width:0;
+  }
+  .tool-card:active{
+    transform:scale(.97);
+    border-color:rgba(200,0,255,.7);
+    box-shadow:0 0 18px rgba(200,0,255,.15);
+  }
+  .tool-card .tool-icon{
+    width:42px;height:42px;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:13px;
+    font-size:21px;
+    margin-bottom:11px;
+    background:linear-gradient(135deg,rgba(122,0,255,.22),rgba(0,229,255,.12));
+    border:1px solid rgba(200,0,255,.2);
+  }
+  .tool-card .tool-name{
+    font-size:12px;
+    font-weight:800;
+    color:#f4eaff;
+    line-height:1.35;
+    margin-bottom:5px;
+    overflow-wrap:anywhere;
+  }
+  .tool-card .tool-desc{
+    font-size:10px;
+    line-height:1.45;
+    color:#897b98;
+  }
+  .tool-card .tool-arrow{
+    position:absolute;
+    right:11px;top:12px;
+    color:#8d50b8;
+    font-size:13px;
+  }
+  .tools-empty{
+    display:none;
+    padding:28px 15px;
+    text-align:center;
+    border:1px dashed rgba(180,0,255,.25);
+    border-radius:16px;
+    color:#8f829d;
+    font-size:12px;
+  }
+  .tools-empty .empty-icon{
+    font-size:28px;
+    margin-bottom:8px;
+  }
+  .tool-detail-head{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:14px;
+    margin-bottom:14px;
+    border-radius:16px;
+    background:linear-gradient(135deg,rgba(45,0,75,.8),rgba(15,0,30,.9));
+    border:1px solid rgba(200,0,255,.25);
+  }
+  .tool-detail-icon{
+    width:48px;height:48px;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:15px;
+    font-size:24px;
+    flex-shrink:0;
+    background:linear-gradient(135deg,rgba(122,0,255,.3),rgba(0,229,255,.15));
+    border:1px solid rgba(200,0,255,.25);
+  }
+  .tool-detail-title{
+    font-size:15px;
+    font-weight:800;
+    margin-bottom:3px;
+  }
+  .tool-detail-desc{
+    font-size:11px;
+    color:#9a8ba8;
+    line-height:1.45;
+  }
+  @media(max-width:360px){
+    .tools-grid{gap:8px}
+    .tool-card{padding:11px}
+    .tool-card .tool-icon{width:37px;height:37px;font-size:19px}
+    .tool-card .tool-name{font-size:11px}
+  }
+</style>
+
+  <style id="xyroplay-tools-cleanup">
+/* ===== TOOLS CLEAN UI ===== */
+#page-tools{padding-bottom:96px}
+#page-tools .page-title{margin-bottom:4px}
+#page-tools .page-subtitle{margin-bottom:16px}
+.tools-head{margin-bottom:12px;padding:15px;border-radius:20px}
+.tools-head-row{margin-bottom:10px;align-items:center}
+.tools-head-title{font-size:14px;letter-spacing:-.1px}
+.tools-count{font-size:9px;padding:5px 8px}
+.tools-search input{height:46px;border-radius:14px;font-size:13px}
+.tools-filter{gap:8px;margin:0 0 13px;padding:2px 1px 5px}
+.tools-filter button{height:34px;padding:0 12px;font-size:10px;white-space:nowrap}
+.tools-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  align-items:stretch;
+}
+.tool-card{
+  min-width:0;
+  min-height:112px;
+  height:112px;
+  box-sizing:border-box;
+  padding:12px 40px 12px 12px;
+  border-radius:18px;
+  display:flex;
+  align-items:stretch;
+  background:linear-gradient(135deg,rgba(30,5,47,.96),rgba(12,3,25,.98));
+}
+.tool-card-top{width:100%;height:100%;align-items:center;gap:12px}
+.tool-icon{
+  width:46px;height:46px;flex:0 0 46px;border-radius:14px;font-size:21px;
+}
+.tool-copy{height:100%;min-width:0;padding:0;display:flex;flex-direction:column;justify-content:center}
+.tool-name{font-size:13px;line-height:1.25;padding-right:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tool-desc{margin-top:5px;font-size:10px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tool-tag{margin-top:7px;width:max-content;max-width:100%;padding:3px 7px;font-size:8px;line-height:1}
+.tool-arrow{right:13px;top:50%;transform:translateY(-50%);font-size:20px;color:#77677f}
+.tool-card:active .tool-arrow{transform:translate(2px,-50%)}
+.tool-card::after{width:90px;height:90px;right:-45px;bottom:-45px}
+/* Category accents */
+.tool-card[data-category="download"]{border-color:rgba(0,210,255,.20)}
+.tool-card[data-category="meme"]{border-color:rgba(255,95,190,.20)}
+.tool-card[data-category="canvas"]{border-color:rgba(155,125,255,.22)}
+.tool-card[data-category="utility"]{border-color:rgba(60,235,180,.20)}
+.tool-card[data-category="other"]{border-color:rgba(255,190,80,.18)}
+@media (min-width:521px){
+  .tools-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .tool-card{height:124px;min-height:124px;padding-right:38px}
+}
+@media (min-width:900px){
+  .tools-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .tool-card{height:126px;min-height:126px}
+}
+@media (max-width:360px){
+  .tool-card{height:106px;min-height:106px}
+  .tool-icon{width:42px;height:42px;flex-basis:42px;font-size:19px}
+  .tool-name{font-size:12px}
+}
+</style>
+
+<style id="xyroplay-neobrutalism-pro-theme">
+/* NEOBRUTALISM PRO — visual-only overrides. Existing HTML, tools and JS behavior preserved. */
+:root {
+  --neo-ink: #171717;
+  --neo-paper: #fffaf0;
+  --neo-yellow: #ffdf5d;
+  --neo-pink: #ff91d2;
+  --neo-blue: #91d9ff;
+  --neo-green: #b8f28b;
+  --neo-purple: #c7b6ff;
+  --neo-shadow: 5px 5px 0 var(--neo-ink);
+}
+html, body {
+  background: var(--neo-paper) !important;
+  color: var(--neo-ink) !important;
+}
+body {
+  background-image: radial-gradient(#17171718 1px, transparent 1px) !important;
+  background-size: 18px 18px !important;
+}
+#authBox {
+  background: var(--neo-paper) !important;
+  background-image: radial-gradient(#17171718 1px, transparent 1px) !important;
+  background-size: 18px 18px !important;
+}
+.auth-card {
+  background: #fff !important;
+  color: var(--neo-ink) !important;
+  border: 3px solid var(--neo-ink) !important;
+  border-radius: 8px !important;
+  box-shadow: 8px 8px 0 var(--neo-ink) !important;
+}
+  .auth-avatar {
+  background: var(--neo-yellow) !important;
+  border: 3px solid var(--neo-ink) !important;
+  border-radius: 8px !important;
+  box-shadow: 4px 4px 0 var(--neo-ink) !important;
+}
+.auth-avatar img {
+  border: 3px solid var(--neo-ink) !important;
+  border-radius: 5px !important;
+  box-shadow: none !important;
+}
+.auth-title, .auth-subtitle, .input-label, .auth-footer,
+.auth-footer b { color: var(--neo-ink) !important; }
+.auth-title { font-weight: 1000 !important; letter-spacing: -1px !important; }
+.auth-subtitle { opacity: .72; }
+.tabs {
+  background: var(--neo-paper) !important;
+  border: 3px solid var(--neo-ink) !important;
+  border-radius: 5px !important;
+}
+.tabs button {
+  color: var(--neo-ink) !important;
+  border-radius: 3px !important;
+  font-weight: 850 !important;
+}
+.tabs button.active {
+  color: var(--neo-ink) !important;
+  background: var(--neo-yellow) !important;
+  box-shadow: 3px 3px 0 var(--neo-ink) !important;
+  outline: 2px solid var(--neo-ink);
+}
+.input-wrap input, .tool-box input, .tool-box textarea,
+.tools-search input {
+  color: var(--neo-ink) !important;
+  background: #fff !important;
+  border: 2px solid var(--neo-ink) !important;
+  border-radius: 4px !important;
+  box-shadow: 3px 3px 0 var(--neo-ink) !important;
+}
+.input-wrap input::placeholder, .tools-search input::placeholder { color: #777 !important; }
+.input-wrap input:focus, .tool-box input:focus, .tool-box textarea:focus,
+.tools-search input:focus {
+  background: var(--neo-yellow) !important;
+  border-color: var(--neo-ink) !important;
+  box-shadow: 4px 4px 0 var(--neo-ink) !important;
+}
+.input-wrap .eye-btn {
+  color: var(--neo-ink) !important;
+  background: var(--neo-pink) !important;
+  border: 2px solid var(--neo-ink) !important;
+  border-radius: 4px !important;
+}
+.btn-main, .btn-run, .btn-open, .btn-save {
+  color: var(--neo-ink) !important;
+  background: var(--neo-yellow) !important;
+  border: 3px solid var(--neo-ink) !important;
+  border-radius: 4px !important;
+  box-shadow: 4px 4px 0 var(--neo-ink) !important;
+  font-weight: 950 !important;
+}
+.btn-main:active, .btn-run:active, .btn-open:active, .btn-save:active {
+  transform: translate(4px,4px) !important;
+  box-shadow: 0 0 0 var(--neo-ink) !important;
+}
+.msg { color: #bd185e !important; font-weight: 800 !important; }
+#app {
+  background: var(--neo-paper) !important;
+  color: var(--neo-ink) !important;
+}
+#content {
+  background: var(--neo-paper) !important;
+  background-image: radial-gradient(#17171712 1px, transparent 1px) !important;
+  background-size: 18px 18px !important;
+}
+.hero-banner, #xyroplay-video-banner {
+  border: 3px solid var(--neo-ink) !important;
+  border-radius: 5px !important;
+  box-shadow: 5px 5px 0 var(--neo-ink) !important;
+}
+.hero-badge {
+  color: var(--neo-ink) !important;
+  background: var(--neo-yellow) !important;
+  border: 2px solid var(--neo-ink) !important;
+  border-radius: 4px !important;
+  backdrop-filter: none !important;
+}
+.clock-time { color: #fff !important; text-shadow: 2px 2px 0 #171717 !important; }
+.clock-date, .clock-right { color: #fff !important; text-shadow: 1px 1px 2px #171717 !important; }
+.user-card-v2, .greeting-card, .stat-card, .action-tile, .list-item,
+.tool-box, .result-box, .back-btn, .info-note, .tools-head, .tool-card,
+.playground, .page .card {
+  color: var(--neo-ink) !important;
+  background: #fff !important;
+  border: 3px solid var(--neo-ink) !important;
+  border-radius: 5px !important;
+  box-shadow: 4px 4px 0 var(--neo-ink) !important;
+}
+.user-card-v2 { background: var(--neo-blue) !important; }
+.user-avatar-v2 {
+  background: var(--neo-pink) !important;
+  color: var(--neo-ink) !important;
+  border: 3px solid var(--neo-ink) !important;
+  border-radius: 5px !important;
+  box-shadow: 3px 3px 0 var(--neo-ink) !important;
+}
+.user-avatar-v2::after { border-color: #fff !important; box-shadow: none !important; }
+.user-info-v2 .role {
+  color: var(--neo-ink) !important;
+  background: var(--neo-yellow) !important;
+  border: 2px solid var(--neo-ink) !important;
+  border-radius: 3px !important;
+}
+.greeting-card { background: var(--neo-pink) !important; }
+.greeting-card h2 {
+  color: var(--neo-ink) !important;
+  background: none !important;
+  -webkit-text-fill-color: var(--neo-ink) !important;
+}
+.greeting-card p, .stat-card .lbl, .tile-desc, .page-subtitle,
+.list-item .d, .tool-box label, .tool-desc, .tool-tag,
+.tools-head-title, .tools-count, .tools-empty, .tools-empty b,
+.result-box, .result-box pre, .download-result pre {
+  color: var(--neo-ink) !important;
+}
+.stat-card:nth-child(1) { background: var(--neo-blue) !important; }
+.stat-card:nth-child(2) { background: var(--neo-green) !important; }
+.stat-card:nth-child(3) { background: var(--neo-purple) !important; }
+.stat-card .val, .stat-card .lbl { color: var(--neo-ink) !important; }
+.sec-title { color: var(--neo-ink) !important; font-weight: 1000 !important; }
+.sec-title::before { background: var(--neo-pink) !important; border: 2px solid var(--neo-ink); }
+.action-tile:nth-child(4n+1) { background: var(--neo-yellow) !important; }
+.action-tile:nth-child(4n+2) { background: var(--neo-pink) !important; }
+.action-tile:nth-child(4n+3) { background: var(--neo-blue) !important; }
+.action-tile:nth-child(4n+4) { background: var(--neo-green) !important; }
+.action-tile:active, .list-item:active, .tool-card:active, .stat-card:active {
+  transform: translate(3px,3px) !important;
+  box-shadow: 1px 1px 0 var(--neo-ink) !important;
+}
+.btn-logout {
+  color: var(--neo-ink) !important;
+  background: var(--neo-pink) !important;
+  border: 3px solid var(--neo-ink) !important;
+  border-radius: 4px !important;
+  box-shadow: 4px 4px 0 var(--neo-ink) !important;
+}
+.page-title {
+  color: var(--neo-ink) !important;
+  background: none !important;
+  -webkit-text-fill-color: var(--neo-ink) !important;
+  font-weight: 1000 !important;
+  letter-spacing: -0.5px !important;
+}
+.list-item { background: #fff !important; }
+.list-item:nth-child(3n+1) { border-left: 8px solid var(--neo-yellow) !important; }
+.list-item:nth-child(3n+2) { border-left: 8px solid var(--neo-pink) !important; }
+.list-item:nth-child(3n+3) { border-left: 8px solid var(--neo-blue) !important; }
+.tool-box { background: #fff !important; }
+.result-box { background: var(--neo-paper) !important; }
+.result-box a { color: #005d9c !important; }
+.info-note { background: var(--neo-blue) !important; } .info-note b { color: var(--neo-ink) !important; }
+.tools-head { background: var(--neo-yellow) !important; }
+.tools-count {
+  color: var(--neo-ink) !important;
+  background: var(--neo-pink) !important;
+  border: 2px solid var(--neo-ink) !important;
+  border-radius: 4px !important;
+}
+.tools-search .clear-search {
+  color: var(--neo-ink) !important;
+  background: var(--neo-pink) !important;
+  border: 2px solid var(--neo-ink) !important;
+  border-radius: 3px !important;
+}
+.tools-filter button {
+  color: var(--neo-ink) !important;
+  background: #fff !important;
+  border: 2px solid var(--neo-ink) !important;
+  border-radius: 4px !important;
+  box-shadow: 2px 2px 0 var(--neo-ink) !important;
+  font-weight: 900 !important;
+}
+.tools-filter button.active {
+  color: var(--neo-ink) !important;
+  background: var(--neo-yellow) !important;
+  border-color: var(--neo-ink) !important;
+  box-shadow: 2px 2px 0 var(--neo-ink) !important;
+}
+.tool-card {
+  background: #fff !important;
+  border-color: var(--neo-ink) !important;
+}
+.tool-card:nth-child(4n+1) { border-left: 8px solid var(--neo-yellow) !important; }
+.tool-card:nth-child(4n+2) { border-left: 8px solid var(--neo-pink) !important; }
+.tool-card:nth-child(4n+3) { border-left: 8px solid var(--neo-blue) !important; }
+.tool-card:nth-child(4n+4) { border-left: 8px solid var(--neo-green) !important; }
+.tool-icon {
+  color: var(--neo-ink) !important;
+  background: var(--neo-yellow) !important;
+  border: 2px solid var(--neo-ink) !important;
+  border-radius: 4px !important;
+  box-shadow: 2px 2px 0 var(--neo-ink) !important;
+}
+.tool-name { color: var(--neo-ink) !important; font-weight: 950 !important; }
+.tool-tag {
+  background: var(--neo-paper) !important;
+  border: 1px solid var(--neo-ink) !important;
+  border-radius: 3px !important;
+}
+.tool-arrow { color: var(--neo-ink) !important; font-weight: 1000 !important; }
+.tools-empty { background: #fff !important; border: 3px dashed var(--neo-ink) !important; }
+#bottomNav {
+  background: var(--neo-yellow) !important;
+  border-top: 3px solid var(--neo-ink) !important;
+  box-shadow: 0 -4px 0 var(--neo-ink) !important;
+  backdrop-filter: none !important;
+}
+.nav-item { color: #555 !important; border-radius: 4px !important; }
+.nav-item.active {
+  color: var(--neo-ink) !important;
+  background: var(--neo-pink) !important;
+  outline: 2px solid var(--neo-ink) !important;
+  box-shadow: 2px 2px 0 var(--neo-ink) !important;
+}
+.nav-item.active .nav-icon { filter: none !important; }
+.nav-item.active .nav-label { color: var(--neo-ink) !important; font-weight: 1000 !important; }
+#skipBtn, #xyroplay-login-animation .login-skip {
+  color: var(--neo-ink) !important;
+  background: var(--neo-yellow) !important;
+  border: 3px solid var(--neo-ink) !important;
+  border-radius: 4px !important;
+  box-shadow: 4px 4px 0 var(--neo-ink) !important;
+  backdrop-filter: none !important;
+  font-weight: 950 !important;
+}
+.img-result img { border: 3px solid var(--neo-ink) !important; border-radius: 4px !important; }
+.img-action-row .btn-open, .img-action-row .btn-save {
+  border: 3px solid var(--neo-ink) !important;
+  border-radius: 4px !important;
+  box-shadow: 3px 3px 0 var(--neo-ink) !important;
+}
+@media (max-width: 380px) {
+  .auth-card { padding: 30px 20px 24px !important; }
+  #content { padding-left: 13px !important; padding-right: 13px !important; }
+}
+</style>
+
+</head>
+<body>
+
+<style id="xyroplay-login-animation-style">
+#xyroplay-login-animation {
+  position:fixed;
+  inset:0;
+  z-index:999999;
+  background:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  opacity:1;
+  visibility:visible;
+  transition:opacity .45s ease, visibility .45s ease;
+}
+#xyroplay-login-animation.hide {
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+#xyroplay-login-animation video {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  background:#000;
+}
+#xyroplay-login-animation .login-skip {
+  position:absolute;
+  right:18px;
+  bottom:28px;
+  z-index:2;
+  padding:13px 22px;
+  border:1px solid rgba(255,255,255,.55);
+  border-radius:999px;
+  background:rgba(0,0,0,.35);
+  color:#fff;
+  font-size:15px;
+  letter-spacing:.5px;
+  cursor:pointer;
+  backdrop-filter:blur(8px);
+}
+#xyroplay-login-animation .login-loading {
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  color:#fff;
+  font-size:13px;
+  letter-spacing:2px;
+  text-shadow:0 2px 12px #000;
+  pointer-events:none;
+}
+</style>
+
+<div id="xyroplay-login-animation" aria-label="Animasi pembuka XyroPlay">
+  <video id="xyroplay-login-video"
+    src="https://n.uguu.se/COuRTRod.mp4"
+    autoplay
+    muted
+    playsinline
+    preload="auto"></video>
+  <div class="login-loading" id="xyroplay-login-loading">XYROPLAY</div>
+  <button class="login-skip" id="xyroplay-login-skip" type="button">SKIP ⏩</button>
+</div>
+
+<script>
+(function () {
+  const overlay = document.getElementById('xyroplay-login-animation');
+  const video = document.getElementById('xyroplay-login-video');
+  const skip = document.getElementById('xyroplay-login-skip');
+  const loading = document.getElementById('xyroplay-login-loading');
+
+  if (!overlay || !video) return;
+
+  let closed = false;
+
+  function closeLoginAnimation() {
+    if (closed) return;
+    closed = true;
+
+    overlay.classList.add('hide');
+
+    setTimeout(() => {
+      try { video.pause(); } catch(e) {}
+      overlay.style.display = 'none';
+    }, 500);
+  }
+
+  if (skip) {
+    skip.addEventListener('click', closeLoginAnimation);
+  }
+
+  video.addEventListener('ended', closeLoginAnimation);
+
+  video.addEventListener('error', () => {
+    if (loading) loading.textContent = 'XYROPLAY';
+    setTimeout(closeLoginAnimation, 1500);
+  });
+
+  video.play().catch(() => {
+    if (loading) loading.textContent = 'XYROPLAY';
+  });
+})();
+</script>
+      <div class="msg" id="registerMsg"></div>
+    </div>
+
+    <div class="auth-footer">Powered by <b>XyroPlay</b></div>
+  </div>
+</div>
+
+<!-- ============ VIDEO SCREEN ============ -->
+<div id="videoScreen">
+  <video id="introVideo" playsinline></video>
+  <button id="skipBtn" onclick="skipVideo()">SKIP ⏩</button>
+</div>
+
+<!-- ============ MAIN APP ============ -->
+<div id="app">
+  <div id="content">
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <div class="hero-banner">
+        <img src="https://h.uguu.se/yTJtlSer.jpg" alt="XyroPlay Banner">
+        <div class="hero-badge">
+          <span class="dot"></span>
+          XYROPLAY PRO
+        </div>
+        <div class="clock-wrap">
+          <div class="clock-left">
+            <div class="clock-time" id="clockTime">00:00:00</div>
+            <div class="clock-date" id="clockDate">Memuat tanggal...</div>
+          </div>
+          <div class="clock-right">
+            <div>PREMIUM TOOLS</div>
+            <div>ALL IN ONE</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="user-card-v2">
+        <div class="user-avatar-v2" id="userAvatar">X</div>
+        <div class="user-info-v2">
+          <h3 id="displayUsername">Pengguna</h3>
+          <span class="role">MEMBER</span>
+        </div>
+      </div>
+
+      <div class="greeting-card">
+        <h2 id="greetingTitle">Halo, Selamat Datang!</h2>
+        <p>Selamat datang di XyroPlay. Nikmati berbagai tools dalam satu tempat.</p>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <span class="emoji">🧰</span>
+          <div class="val" id="totalTools">0</div>
+          <div class="lbl">Tools</div>
+        </div>
+        <div class="stat-card">
+          <span class="emoji">⚡</span>
+          <div class="val">FAST</div>
+          <div class="lbl">Response</div>
+        </div>
+        <div class="stat-card">
+          <span class="emoji">🌐</span>
+          <div class="val">ONLINE</div>
+          <div class="lbl">Status</div>
+        </div>
+      </div>
+
+      <div class="sec-title">Menu Cepat</div>
+      <div class="action-grid">
+        <div class="action-tile" onclick="showPage('tools')">
+          <span class="tile-emoji">🧰</span>
+          <div class="tile-name">Semua Tools</div>
+          <div class="tile-desc">Jelajahi fitur XyroPlay</div>
+        </div>
+        <div class="action-tile" onclick="showPage('download')">
+          <span class="tile-emoji">📥</span>
+          <div class="tile-name">Downloader</div>
+          <div class="tile-desc">Unduh media favorit</div>
+        </div>
+        <div class="action-tile" onclick="showPage('canvas')">
+          <span class="tile-emoji">🎨</span>
+          <div class="tile-name">Canvas Tools</div>
+          <div class="tile-desc">Buat gambar unik</div>
+        </div>
+        <div class="action-tile" onclick="showPage('settings')">
+          <span class="tile-emoji">⚙️</span>
+          <div class="tile-name">Pengaturan</div>
+          <div class="tile-desc">Atur akun dan aplikasi</div>
+        </div>
+      </div>
+
+      <button class="btn-logout" onclick="doLogout()">🚪 Keluar dari Akun</button>
+    </div>
+
+    <!-- TOOLS -->
+    <div class="page" id="page-tools">
+      <div class="page-title">Semua Tools</div>
+      <div class="page-subtitle">Pilih tools yang ingin lu gunakan.</div>
+
+      <div class="tools-head">
+        <div class="tools-head-row">
+          <div class="tools-head-title">Explore Tools</div>
+          <div class="tools-count" id="toolsCount">0 TOOLS</div>
+        </div>
+        <div class="tools-search">
+          <span class="search-icon">🔎</span>
+          <input type="search" id="toolsSearch" placeholder="Cari tools..." autocomplete="off">
+          <button class="clear-search" id="clearToolsSearch" type="button">✕</button>
+        </div>
+      </div>
+
+      <div class="tools-filter" id="toolsFilter">
+        <button class="active" data-filter="all">Semua</button>
+        <button data-filter="download">Downloader</button>
+        <button data-filter="canvas">Canvas</button>
+        <button data-filter="meme">Meme</button>
+        <button data-filter="utility">Utility</button>
+        <button data-filter="other">Lainnya</button>
+      </div>
+
+      <div class="tools-grid" id="toolsGrid"></div>
+      <div class="tools-empty" id="toolsEmpty">
+        <div class="empty-icon">🔍</div>
+        <b>Tools tidak ditemukan</b>
+        <p>Coba kata kunci yang berbeda.</p>
+      </div>
+    </div>
+
+    <!-- DOWNLOAD -->
+    <div class="page" id="page-download">
+      <div class="page-title">Downloader</div>
+      <div class="page-subtitle">Unduh media melalui layanan yang tersedia.</div>
+      <div class="list" id="downloadList"></div>
+    </div>
+
+    <!-- CANVAS -->
+    <div class="page" id="page-canvas">
+      <div class="page-title">Canvas Tools</div>
+      <div class="page-subtitle">Buat gambar dengan berbagai efek menarik.</div>
+      <div class="list" id="canvasList"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-title">Pengaturan</div>
+      <div class="page-subtitle">Pengaturan akun XyroPlay.</div>
+      <div class="tool-box">
+        <label>Username saat ini</label>
+        <input type="text" id="settingsUsername" readonly>
+        <button class="btn-run" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- TOOL DETAIL -->
+    <div class="page" id="page-tool-detail">
+      <button class="back-btn" onclick="showPage('tools')">← Kembali ke Tools</button>
+      <div class="tool-detail-head">
+        <div class="tool-detail-icon" id="detailIcon">🧰</div>
+        <div>
+          <div class="tool-detail-title" id="detailTitle">Tool</div>
+          <div class="tool-detail-desc" id="detailDesc">Deskripsi tool</div>
+        </div>
+      </div>
+      <div id="toolDetailContent"></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div id="bottomNav">
+    <div class="nav-item active" data-page="home" onclick="showPage('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home</span>
+    </div>
+    <div class="nav-item" data-page="tools" onclick="showPage('tools')">
+      <span class="nav-icon">🧰</span>
+      <span class="nav-label">Tools</span>
+    </div>
+    <div class="nav-item" data-page="download" onclick="showPage('download')">
+      <span class="nav-icon">📥</span>
+      <span class="nav-label">Download</span>
+    </div>
+    <div class="nav-item" data-page="canvas" onclick="showPage('canvas')">
+      <span class="nav-icon">🎨</span>
+      <span class="nav-label">Canvas</span>
+    </div>
+    <div class="nav-item" data-page="settings" onclick="showPage('settings')">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Setting</span>
+    </div>
+  </div>
+</div>
+
+    });
+
+  video.addEventListener('error', () => {
+    // Jangan biarkan halaman kosong kalau video gagal dimuat.
+    closeLoginAnimation();
+  });
+
+  // Coba autoplay secara eksplisit untuk WebView/Android.
+  const p = video.play();
+  if (p && p.catch) p.catch(() => {});
+})();
+</script>
+
+
+
+
+
+<!-- ============ AUTH ============ -->
+<div id="authBox">
+  <div class="auth-card">
+    <div class="auth-avatar">
+      <img src="https://h.uguu.se/BCVjUuVc.jpg" alt="XyroPlay" onerror="this.style.display='none'">
+    </div>
+    <div class="auth-title">XyroPlay</div>
+    <div class="auth-subtitle">Login atau daftar buat pakai fitur</div>
+
+    <div class="tabs">
+      <button class="active" onclick="switchTab('login',this)">Login</button>
+      <button onclick="switchTab('register',this)">Daftar</button>
+    </div>
+
+    <div class="form-section active" id="loginForm">
+      <label class="input-label">Email / Username</label>
+      <div class="input-wrap">
+        <input type="text" id="loginUser" placeholder="Email atau username" autocomplete="username">
+      </div>
+      <label class="input-label">Password</label>
+      <div class="input-wrap">
+        <input type="password" id="loginPass" placeholder="Password">
+        <button class="eye-btn" onclick="togglePass('loginPass',this)" type="button">👁</button>
+      </div>
+      <button class="btn-main" onclick="doLogin()">Login</button>
+      <div class="msg" id="loginMsg"></div>
+    </div>
+
+    <div class="form-section" id="registerForm">
+      <label class="input-label">Username</label>
+      <div class="input-wrap">
+        <input type="text" id="regUser" placeholder="Username baru" autocomplete="off">
+      </div>
+      <label class="input-label">Password</label>
+      <div class="input-wrap">
+        <input type="password" id="regPass" placeholder="Password">
+        <button class="eye-btn" onclick="togglePass('regPass',this)" type="button">👁</button>
+      </div>
+      <label class="input-label">Konfirmasi Password</label>
+      <div class="input-wrap">
+        <input type="password" id="regPass2" placeholder="Ulangi password">
+        <button class="eye-btn" onclick="togglePass('regPass2',this)" type="button">👁</button>
+      </div>
+      <button class="btn-main" onclick="doRegister()">Daftar</button>
+      <div class="msg" id="regMsg"></div>
+    </div>
+
+    <div class="auth-footer">
+      Password diamankan dengan <b>enkripsi PBKDF2</b>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VIDEO ============ -->
+<div id="videoScreen">
+  <video id="introVideo" autoplay playsinline>
+    <source src="https://n.uguu.se/itALBKTR.mp4" type="video/mp4">
+  </video>
+  <button id="skipBtn" onclick="skipVideo()">SKIP ⏭</button>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <div id="content">
+
+    <!-- ============ HOME (UI BARU) ============ -->
+    <div class="page active" id="page-home">
+
+      <!-- Hero Banner + Jam -->
+      <div class="hero-banner">
+        <img alt="Banner XyroPlay" src="https://h.uguu.se/BCVjUuVc.jpg" alt="Banner XyroPlay" onerror="this.style.display='none';this.parentElement.classList.add('banner-fallback');">
+        <div class="hero-badge">
+          <span class="dot"></span> XYROPLAY
+        </div>
+
+<div id="xyroplay-video-banner" style="margin:0 16px 18px;overflow:hidden;border-radius:18px;border:1px solid rgba(180,0,255,.35);background:#09000f;box-shadow:0 10px 30px rgba(100,0,180,.18);position:relative;">
+  <video
+    src="https://n.uguu.se/COuRTRod.mp4"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="auto"
+    style="display:block;width:100%;height:210px;object-fit:cover;background:#09000f;"
+    aria-label="Animasi video XyroPlay"
+  ></video>
+  <div style="position:absolute;left:12px;bottom:10px;padding:5px 10px;border-radius:999px;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);font-size:11px;color:#eee;">
+    ✨ XYROPLAY
+  </div>
+</div>
+
+        <div class="clock-wrap">
+          <div class="clock-left">
+            <div class="clock-time" id="liveClock">00:00</div>
+            <div class="clock-date" id="liveDate">—</div>
+          </div>
+          <div class="clock-right" id="liveGreeting">—</div>
+        </div>
+      </div>
+
+      <!-- User Card -->
+      <div class="user-card-v2">
+        <div class="user-avatar-v2" id="userAvatar">A</div>
+        <div class="user-info-v2">
+          <h3 id="userName">admin</h3>
+          <span class="role">⚡ Premium User</span>
+        </div>
+      </div>
+
+      <!-- Greeting -->
+      <div class="greeting-card">
+        <h2>Halo, <span id="greetName">admin</span> ✨</h2>
+        <p>Semua tool & AI siap dipakai. Pilih menu di bawah buat mulai.</p>
+      </div>
+
+      <!-- Quick stats -->
+      <div class="sec-title">Statistik</div>
+      <div class="stat-row">
+        <div class="stat-card">
+                <div class="list">
+        <div class="list-item" onclick="openTool('ai')">
+          <div class="ic">🤖</div>
+          <div>
+            <div class="t">Nova AI</div>
+            <div class="d">Chat dengan AI</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="page" id="page-profile">
+      <div class="page-title">👤 Profile</div>
+      <div class="page-subtitle">Informasi akun kamu</div>
+      <div class="user-card-v2">
+        <div class="user-avatar-v2" id="profileAvatar">A</div>
+        <div class="user-info-v2">
+          <h3 id="profileName">admin</h3>
+          <span class="role">⚡ Premium User</span>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">
+        <span>🚪</span> Logout
+      </button>
+    </div>
+
+  </div>
+    </div>
+          <div class="list">
+        <div class="list-item" onclick="openAI('novaai')">
+          <div class="ic">✨</div><div><div class="t">Nova AI</div><div class="d">Chat AI serba bisa</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOL WORKER -->
+    <div class="page" id="page-tool-worker">
+      <button class="back-btn" onclick="goBack()">‹ Kembali</button>
+      <div class="page-title" id="toolTitle">Tool</div>
+      <div class="page-subtitle" id="toolDesc"></div>
+      <div id="toolNote"></div>
+      <div class="tool-box" id="toolForm"></div>
+      <div class="result-box" id="toolResult">Hasil akan muncul di sini...</div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div class="page" id="page-admin">
+      <div class="admin-heading"><div><div class="page-title">🛡️ Admin Center</div><div class="page-subtitle">Kelola XYROPLAY dalam satu tempat</div></div><span class="admin-live"><i></i> ADMIN</span></div>
+      <div class="admin-warning">🔒 Versi HTML lokal: data tersimpan di browser/perangkat ini, bukan database online. Jangan gunakan untuk data sensitif di website publik.</div>
+      <div class="admin-stats">
+        <div class="admin-stat"><span>👥 Total akun</span><b id="adminUserCount">0</b><small>Termasuk admin</small></div>
+        <div class="admin-stat"><span>📣 Pengumuman</span><b id="adminNoticeCount">0</b><small>Pengumuman aktif</small></div>
+        <div class="admin-stat"><span>⚙️ Status website</span><b id="adminMaintenanceStatus">Aktif</b><small id="adminStatusHint">Siap digunakan</small></div>
+      </div>
+      <div class="admin-section-label">PENGELOLAAN</div>
+      <section class="admin-card"><div class="admin-card-head"><div><h3>👥 Manajemen pengguna</h3><p>Cari akun, buat akun baru, atau hapus akun.</p></div><span class="admin-chip" id="adminVisibleUsers">0 akun</span></div>
+        <input id="adminUserSearch" placeholder="🔎 Cari username..." oninput="renderAdminUsers()" aria-label="Cari username" />
+        <div class="admin-inline"><input id="adminNewUser" placeholder="Username baru" autocomplete="off"><input id="adminNewPass" type="password" placeholder="Password (min. 6)" autocomplete="new-password"></div>
+        <button class="btn-run" onclick="adminCreateUser()">＋ Buat akun pengguna</button><div id="adminUsersList" class="admin-users"></div>
+      </section>
+      <section class="admin-card"><div class="admin-card-head"><div><h3>📣 Pengumuman</h3><p>Pesan informasi untuk ditampilkan dan disimpan.</p></div></div><textarea id="adminNoticeInput" rows="4" maxlength="1000" placeholder="Tulis pengumuman untuk pengguna..."></textarea><div class="admin-actions"><button class="btn-run" onclick="adminSaveNotice()">Simpan pengumuman</button><button class="admin-toggle" onclick="adminClearNotice()">Hapus</button></div><div id="adminNoticePreview" class="admin-preview">Belum ada pengumuman.</div></section>
+      <div class="admin-section-label">KONTROL WEBSITE</div>
+      <section class="admin-card"><h3>⚙️ Pengaturan website</h3>
+        <div class="admin-setting"><div><b>Mode maintenance</b><small>Menandai website sedang pemeliharaan</small></div><button class="admin-toggle" id="adminMaintenanceBtn" onclick="adminToggleMaintenance()">Aktifkan</button></div>
+        <div class="admin-setting"><div><b>Tema tampilan</b><small>Ganti tampilan admin terang/gelap</small></div><button class="admin-toggle" onclick="adminToggleTheme()">Ganti tema</button></div>
+        <div class="admin-setting"><div><b>Nama website</b><small id="adminSiteNamePreview">XYROPLAY</small></div><button class="admin-toggle" onclick="adminSetSiteName()">Ubah nama</button></div>
+        <div class="admin-setting"><div><b>Ekspor data</b><small>Unduh ringkasan data lokal dalam JSON</small></div><button class="admin-toggle" onclick="adminExportData()">Ekspor JSON</button></div>
+        <div class="admin-setting"><div><b>Impor cadangan</b><small>Pulihkan pengaturan dari file JSON</small></div><button class="admin-toggle" onclick="document.getElementById('adminImportFile').click()">Pilih file</button><input id="adminImportFile" type="file" accept="application/json,.json" hidden onchange="adminImportData(event)"></div>
+      </section>
+      <div class="admin-section-label">KEAMANAN & AKTIVITAS</div>
+      <section class="admin-card"><div class="admin-card-head"><div><h3>🧾 Riwayat aktivitas</h3><p>Aktivitas admin yang tercatat pada browser ini.</p></div><span class="admin-chip" id="adminActivityCount">0 log</span></div><div id="adminActivityList" class="admin-activity">Belum ada aktivitas.</div><button class="admin-toggle admin-clear-log" onclick="adminClearActivity()">Bersihkan riwayat</button></section>
+      <section class="admin-card admin-danger-card"><h3>⚠️ Zona tindakan penting</h3><p>Gunakan dengan hati-hati. Tindakan ini tidak bisa dibatalkan.</p><button class="admin-danger-btn" onclick="adminResetLocalSettings()">Reset pengaturan admin lokal</button></section>
+    </div>
+
+    <!-- AI WORKER -->
+    <div class="page" id="page-ai-worker">
+      <button class="back-btn" onclick="goBack()">‹ Kembali</button>
+      <div class="page-title" id="aiTitle">AI</div>
+      <div class="page-subtitle" id="aiDesc"></div>
+      <div class="tool-box">
+        <label>Tulis pesan:</label>
+        <textarea id="aiInput" rows="3" placeholder="Hai..."></textarea>
+        <button class="btn-run" id="aiSendBtn" onclick="sendAIChat()">Kirim 🚀</button>
+      </div>
+      <div class="result-box" id="aiResult">Balasan akan muncul di sini...</div>
+    </div>
+
+  </div>
+
+  <div id="bottomNav">
+    <div class="nav-item active" data-page="home" onclick="navTo('home')">
+      <div class="nav-icon">🏠</div><div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" data-page="download" onclick="navTo('download')">
+      <div class="nav-icon">⬇️</div><div class="nav-label">Download</div>
+    </div>
+    <div class="nav-item" data-page="tools" onclick="navTo('tools')">
+      <div class="nav-icon">🛠️</div><div class="nav-label">Tools</div>
+    </div>
+    <div class="nav-item" data-page="ai" onclick="navTo('ai')">
+      <div class="nav-icon">🤖</div><div class="nav-label">AI</div>
+    </div>
+    <div class="nav-item admin-nav-item" id="adminNavItem" data-page="admin" onclick="navTo('admin')" style="display:none">
+      <div class="nav-icon">🛡️</div><div class="nav-label">Admin</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ============ TOGGLE PASSWORD ============ */
+  function togglePass(inputId, btn) {
+    const inp = document.getElementById(inputId);
+    if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+    else { inp.type = 'password'; btn.textContent = '👁'; }
+  }
+
+  /* ============ LIVE CLOCK ============ */
+  const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+  function pad(n) { return n < 10 ? '0' + n : n; }
+
+  function updateClock() {
+    const now = new Date();
+    const hh = pad(now.getHours());
+    const mm = pad(now.getMinutes());
+    const ss = pad(now.getSeconds());
+
+    const timeEl = document.getElementById('liveClock');
+    if (timeEl) timeEl.textContent = `${hh}:${mm}:${ss}`;
+
+    const hari = HARI[now.getDay()];
+    const tgl = now.getDate();
+    const bln = BULAN[now.getMonth()];
+    const thn = now.getFullYear();
+
+    const dateEl = document.getElementById('liveDate');
+    if (dateEl) dateEl.textContent = `${hari}, ${tgl} ${bln} ${thn}`;
+
+    const hour = now.getHours();
+    let greet = '';
+    if (hour >= 4 && hour < 11) greet = '🌅 Pagi';
+    else if (hour >= 11 && hour < 15) greet = '☀️ Siang';
+    else if (hour >= 15 && hour < 18) greet = '🌇 Sore';
+    else greet = '🌙 Malam';
+
+    const greetEl = document.getElementById('liveGreeting');
+    if (greetEl) greetEl.textContent = greet;
+  }
+
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  /* ============ NAV ============ */
+  let navHistory = ['home'];
+  let currentUser = '';
+
+  function navTo(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      function renderAdminUsers(){
+    const list=document.getElementById('adminUsersList');
+    if(!list)return;
+    const q=(document.getElementById('adminUserSearch')?.value||'').toLowerCase();
+    const users=adminUsers().filter(u=>u.name.toLowerCase().includes(q));
+    document.getElementById('adminVisibleUsers').textContent=users.length+' akun';
+    list.innerHTML=users.map(u=>`<div class="admin-user-row"><div><b>${escapeAdminText(u.name)}</b><small>Akun pengguna</small></div><button class="admin-delete-btn" onclick="adminDeleteUser('${escapeAdminText(u.name)}')">Hapus</button></div>`).join('')||'<div class="admin-empty">Tidak ada akun ditemukan.</div>';
+  }
+  function escapeAdminText(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function adminCreateUser(){
+    if(!adminRequire())return;
+    const u=document.getElementById('adminNewUser').value.trim(),p=document.getElementById('adminNewPass').value;
+    if(!u||!p){alert('Isi username dan password.');return;}
+    if(p.length<6){alert('Password minimal 6 karakter.');return;}
+    if(u.toLowerCase()===XYRO_ADMIN_EMAIL||localStorage.getItem('xyro_user_'+u)){alert('Username sudah digunakan.');return;}
+    localStorage.setItem('xyro_user_'+u,p);
+    document.getElementById('adminNewUser').value='';
+    document.getElementById('adminNewPass').value='';
+    adminLog('Membuat akun: '+u);renderAdminPanel();alert('Akun berhasil dibuat.');
+  }
+  function adminDeleteUser(u){
+    if(!adminRequire())return;
+    if(!confirm('Hapus akun '+u+'?'))return;
+    localStorage.removeItem('xyro_user_'+u);
+    adminLog('Menghapus akun: '+u);renderAdminPanel();
+  }
+  function adminSaveNotice(){
+    if(!adminRequire())return;
+    const value=document.getElementById('adminNoticeInput').value.trim();
+    if(value)localStorage.setItem('xyro_admin_notice',value);
+    else localStorage.removeItem('xyro_admin_notice');
+    adminLog('Memperbarui pengumuman');renderAdminPanel();
+  }
+  function adminClearNotice(){
+    if(!adminRequire())return;
+    localStorage.removeItem('xyro_admin_notice');
+    adminLog('Menghapus pengumuman');renderAdminPanel();
+  }
+  function adminToggleMaintenance(){
+    if(!adminRequire())return;
+    const active=localStorage.getItem('xyro_maintenance')==='1';
+    localStorage.setItem('xyro_maintenance',active?'0':'1');
+    adminLog(active?'Menonaktifkan maintenance':'Mengaktifkan maintenance');renderAdminPanel();
+  }
+  function adminToggleTheme(){
+    if(!adminRequire())return;
+    document.body.classList.toggle('admin-light');
+    localStorage.setItem('xyro_admin_theme',document.body.classList.contains('admin-light')?'light':'dark');
+    adminLog('Mengubah tema admin');
+  }
+  function adminSetSiteName(){
+    if(!adminRequire())return;
+    const name=prompt('Masukkan nama website:',localStorage.getItem('xyro_site_name')||'XYROPLAY');
+    if(name===null)return;
+    const clean=name.trim().slice(0,40);
+    if(!clean){alert('Nama tidak boleh kosong.');return;}
+    localStorage.setItem('xyro_site_name',clean);
+    adminLog('Mengubah nama website: '+clean);renderAdminPanel();
+  }
+  function adminExportData(){
+    if(!adminRequire())return;
+    const data={siteName:localStorage.getItem('xyro_site_name')||'XYROPLAY',notice:localStorage.getItem('xyro_admin_notice')||'',maintenance:localStorage.getItem('xyro_maintenance')==='1',exportedAt:new Date().toISOString()};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='xyroplay-backup.json';a.click();
+    URL.revokeObjectURL(url);adminLog('Mengekspor pengaturan');
+  }
+  function adminImportData(event){
+    if(!adminRequire())return;
+    const file=event.target.files?.[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const data=JSON.parse(reader.result);
+        if(data.siteName)localStorage.setItem('xyro_site_name',String(data.siteName).slice(0,40));
+        if(typeof data.notice==='string'){
+          if(data.notice)localStorage.setItem('xyro_admin_notice',data.notice);
+          else localStorage.removeItem('xyro_admin_notice');
+        }
+        if(typeof data.maintenance==='boolean')localStorage.setItem('xyro_maintenance',data.maintenance?'1':'0');
+        adminLog('Mengimpor pengaturan');renderAdminPanel();alert('Pengaturan berhasil diimpor.');
+      }catch(e){alert('File JSON tidak valid.');}
+      event.target.value='';
+    };
+    reader.readAsText(file);
+  }
+  function adminClearActivity(){
+    if(!adminRequire()||!confirm('Bersihkan seluruh riwayat aktivitas?'))return;
+    localStorage.removeItem('xyro_admin_activity');adminLog('Membersihkan riwayat aktivitas');renderAdminPanel();
+  }
+  function adminResetLocalSettings(){
+    if(!adminRequire()||!confirm('Reset pengaturan admin lokal?'))return;
+    ['xyro_admin_notice','xyro_maintenance','xyro_site_name','xyro_admin_theme'].forEach(k=>localStorage.removeItem(k));
+    adminLog('Reset pengaturan admin');renderAdminPanel();
+  }
+      /* ============ NAV ============ */
+  let navHistory = ['home'];
+  let currentUser = '';
+
+  function navTo(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById('page-' + page);
+    if (target) target.classList.add('active');
+
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navBtn = document.querySelector(`.nav-item[data-page="${page}"]`);
+    if (navBtn) navBtn.classList.add('active');
+
+    if (navHistory[navHistory.length - 1] !== page) navHistory.push(page);
+    document.getElementById('content').scrollTop = 0;
+  }
+
+  function goBack() {
+    navHistory.pop();
+    const prev = navHistory[navHistory.length - 1] || 'home';
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + prev).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navBtn = document.querySelector(`.nav-item[data-page="${prev}"]`);
+    if (navBtn) navBtn.classList.add('active');
+    document.getElementById('content').scrollTop = 0;
+  }
+
+  /* ============ AUTH ============ */
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+    document.getElementById(tab === 'login' ? 'loginForm' : 'registerForm').classList.add('active');
+  }
+
+  function doRegister() {
+    const u = document.getElementById('regUser').value.trim();
+    const p = document.getElementById('regPass').value;
+    const p2 = document.getElementById('regPass2').value;
+    const msg = document.getElementById('regMsg');
+
+    if (!u || !p || !p2) {
+      msg.textContent = 'Isi semua field!';
+      return;
+    }
+
+    if (u.toLowerCase() === 'agus1234567pa@gmail.com') {
+      msg.textContent = 'Email ini khusus admin.';
+      return;
+    }
+
+    if (localStorage.getItem('xyro_user_' + u)) {
+      msg.textContent = 'Username sudah dipakai.';
+      return;
+    }
+
+    if (p !== p2) {
+      msg.textContent = 'Password tidak sama!';
+      return;
+    }
+
+    if (p.length < 4) {
+      msg.textContent = 'Password minimal 4 karakter!';
+      return;
+    }
+
+    localStorage.setItem('xyro_user_' + u, p);
+    msg.style.color = '#00ff99';
+    msg.textContent = 'Akun berhasil dibuat! Silakan login.';
+
+    setTimeout(() => {
+      document.querySelectorAll('.tabs button')[0].click();
+      document.getElementById('loginUser').value = u;
+      document.getElementById('loginPass').value = '';
+      msg.textContent = '';
+    }, 1500);
+  }
+      const XYRO_ADMIN_EMAIL = 'agus1234567pa@gmail.com';
+  const XYRO_ADMIN_PASSWORD = 'admin22';
+  let currentRole = 'user';
+
+  function doLogin() {
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    const msg = document.getElementById('loginMsg');
+    if (!u || !p) { msg.textContent = 'Isi email/username dan password!'; return; }
+    if (u.toLowerCase() === XYRO_ADMIN_EMAIL && p === XYRO_ADMIN_PASSWORD) {
+      msg.textContent = '';
+      currentRole = 'admin';
+      adminLog('Admin login');
+      playIntro(XYRO_ADMIN_EMAIL);
+      return;
+    }
+    const saved = localStorage.getItem('xyro_user_' + u);
+    if (saved && saved === p) { currentRole = 'user'; adminLog('Login pengguna: ' + u); msg.textContent = ''; playIntro(u); }
+    else { msg.textContent = 'Email/username atau password salah!'; }
+  }
+
+  function playIntro(username) {
+    document.getElementById('authBox').style.display = 'none';
+    document.getElementById('videoScreen').style.display = 'block';
+    const vid = document.getElementById('introVideo');
+    vid.currentTime = 0;
+    vid.play().catch(e => console.log('Autoplay gagal:', e));
+    vid.onended = () => showApp(username);
+  }
+
+  function skipVideo() {
+    document.getElementById('introVideo').pause();
+    showApp(document.getElementById('loginUser').value.trim());
+  }
+
+  function showApp(username) {
+    currentUser = username;
+    document.getElementById('videoScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    const spotifySearchButton = document.getElementById('spotifySearchOpen');
+    if (spotifySearchButton) spotifySearchButton.style.display = 'flex';
+    document.getElementById('userName').textContent = username;
+    document.getElementById('userAvatar').textContent = username.charAt(0).toUpperCase();
+    document.getElementById('greetName').textContent = username;
+    const adminNav = document.getElementById('adminNavItem');
+    if (adminNav) adminNav.style.display = currentRole === 'admin' ? 'flex' : 'none';
+    if (currentRole === 'admin') renderAdminPanel();
+    navTo('home');
+  }
+
+  function logout() {
+    document.getElementById('app').style.display = 'none';
+    const spotifySearchButton = document.getElementById('spotifySearchOpen');
+    const spotifySearchModal = document.getElementById('spotifySearchModal');
+    if (spotifySearchButton) spotifySearchButton.style.display = 'none';
+    if (spotifySearchModal) spotifySearchModal.classList.remove('open');
+    document.getElementById('authBox').style.display = 'flex';
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+    navHistory = ['home'];
+    currentUser = '';
+    currentRole = 'user';
+    const adminNav = document.getElementById('adminNavItem');
+    if (adminNav) adminNav.style.display = 'none';
+  }
+
+  /* ============ ADMIN CONTROL CENTER ============ */
+  function adminRequire() { if (currentRole !== 'admin') { alert('Akses khusus admin.'); navTo('home'); return false; } return true; }
+  function adminLog(text) { try { const arr=JSON.parse(localStorage.getItem('xyro_admin_activity')||'[]');arr.unshift({text,at:new Date().toLocaleString('id-ID')});localStorage.setItem('xyro_admin_activity',JSON.stringify(arr.slice(0,60))); } catch(e) {} }
+  function adminUsers() { const users=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('xyro_user_'))users.push({name:k.slice(10),key:k});}return users.sort((a,b)=>a.name.localeCompare(b.name)); }
+  function renderAdminPanel() {
+    if(!adminRequire())return;
+    const users=adminUsers(),notice=localStorage.getItem('xyro_admin_notice')||'',maintenance=localStorage.getItem('xyro_maintenance')==='1',activity=JSON.parse(localStorage.getItem('xyro_admin_activity')||'[]');
+    document.getElementById('adminUserCount').textContent=users.length+1;
+    document.getElementById('adminNoticeCount').textContent=notice?1:0;
+    document.getElementById('adminMaintenanceStatus').textContent=maintenance?'Maintenance':'Aktif';
+    document.getElementById('adminStatusHint').textContent=maintenance?'Pemeliharaan aktif':'Siap digunakan';
+    document.getElementById('adminMaintenanceBtn').textContent=maintenance?'Matikan maintenance':'Aktifkan maintenance';
+    document.getElementById('adminNoticeInput').value=notice;
+      function renderAdminPanel() {
+    if(!adminRequire())return;
+    const users=adminUsers(),notice=localStorage.getItem('xyro_admin_notice')||'',maintenance=localStorage.getItem('xyro_maintenance')==='1',activity=JSON.parse(localStorage.getItem('xyro_admin_activity')||'[]');
+    document.getElementById('adminUserCount').textContent=users.length+1;
+    document.getElementById('adminNoticeCount').textContent=notice?1:0;
+    document.getElementById('adminMaintenanceStatus').textContent=maintenance?'Maintenance':'Aktif';
+    document.getElementById('adminStatusHint').textContent=maintenance?'Pemeliharaan aktif':'Siap digunakan';
+    document.getElementById('adminMaintenanceBtn').textContent=maintenance?'Matikan maintenance':'Aktifkan maintenance';
+    document.getElementById('adminNoticeInput').value=notice;
+    document.getElementById('adminNoticePreview').textContent=notice||'Belum ada pengumuman.';
+    document.getElementById('adminSiteNamePreview').textContent=localStorage.getItem('xyro_site_name')||'XYROPLAY';
+    document.getElementById('adminActivityCount').textContent=activity.length+' log';
+    renderAdminUsers();
+    document.getElementById('adminActivityList').innerHTML=activity.length?activity.map(a=>`<div class="admin-activity-row"><b>${escapeAdminText(a.text)}</b><small>${escapeAdminText(a.at)}</small></div>`).join(''):'Belum ada aktivitas.';
+  }
+
+  function renderAdminUsers(){
+    const el=document.getElementById('adminUsersList');if(!el)return;
+    const q=(document.getElementById('adminUserSearch')?.value||'').trim().toLowerCase();
+    const users=adminUsers().filter(u=>u.name.toLowerCase().includes(q));
+    const count=document.getElementById('adminVisibleUsers');if(count)count.textContent=users.length+' akun';
+    el.innerHTML=users.length?users.map(u=>`<div class="admin-user-row"><div class="admin-user-info"><span class="admin-avatar">${escapeAdminText(u.name.slice(0,1).toUpperCase())}</span><span><b>${escapeAdminText(u.name)}</b><small>Akun pengguna</small></span></div><button onclick="adminDeleteUser('${encodeURIComponent(u.name)}')">Hapus</button></div>`).join(''):'<div class="admin-empty">Tidak ada akun yang cocok.</div>';
+  }
+
+  function escapeAdminText(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function adminSaveNotice(){if(!adminRequire())return;const v=document.getElementById('adminNoticeInput').value.trim();localStorage.setItem('xyro_admin_notice',v);adminLog(v?'Pengumuman diperbarui':'Pengumuman dikosongkan');renderAdminPanel();alert('Pengumuman disimpan di browser ini.');}
+  function adminClearNotice(){if(!adminRequire()||!confirm('Hapus pengumuman saat ini?'))return;localStorage.removeItem('xyro_admin_notice');adminLog('Pengumuman dihapus');renderAdminPanel();}
+  function adminCreateUser(){if(!adminRequire())return;const u=document.getElementById('adminNewUser').value.trim(),p=document.getElementById('adminNewPass').value;if(!/^[a-zA-Z0-9_.-]{3,32}$/.test(u)||p.length<6){alert('Username 3–32 karakter (huruf, angka, titik, _ atau -) dan password minimal 6 karakter.');return;}if(u.toLowerCase()==='agus1234567pa@gmail.com'||localStorage.getItem('xyro_user_'+u)){alert('Username sudah dipakai atau tidak diizinkan.');return;}localStorage.setItem('xyro_user_'+u,p);adminLog('Membuat akun: '+u);document.getElementById('adminNewUser').value='';document.getElementById('adminNewPass').value='';renderAdminPanel();}
+  function adminDeleteUser(encoded){if(!adminRequire())return;const u=decodeURIComponent(encoded);if(!confirm('Hapus akun '+u+'?'))return;localStorage.removeItem('xyro_user_'+u);adminLog('Menghapus akun: '+u);renderAdminPanel();}
+  function adminToggleMaintenance(){if(!adminRequire())return;const on=localStorage.getItem('xyro_maintenance')==='1';localStorage.setItem('xyro_maintenance',on?'0':'1');adminLog(on?'Maintenance dimatikan':'Maintenance diaktifkan');renderAdminPanel();}
+  function adminToggleTheme(){if(!adminRequire())return;document.body.classList.toggle('admin-light-theme');localStorage.setItem('xyro_admin_theme',document.body.classList.contains('admin-light-theme')?'light':'dark');adminLog('Tema tampilan diubah');}
+  function adminSetSiteName(){if(!adminRequire())return;const old=localStorage.getItem('xyro_site_name')||'XYROPLAY',name=prompt('Masukkan nama website:',old);if(name===null)return;const v=name.trim().slice(0,40);if(!v){alert('Nama website tidak boleh kosong.');return;}localStorage.setItem('xyro_site_name',v);adminLog('Nama website diubah: '+v);renderAdminPanel();}
+  function adminExportData(){if(!adminRequire())return;const data={exportedAt:new Date().toISOString(),users:adminUsers().map(x=>x.name),notice:localStorage.getItem('xyro_admin_notice')||'',activity:JSON.parse(localStorage.getItem('xyro_admin_activity')||'[]'),maintenance:localStorage.getItem('xyro_maintenance')==='1',siteName:localStorage.getItem('xyro_site_name')||'XYROPLAY',theme:localStorage.getItem('xyro_admin_theme')||'dark'};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='xyroplay-admin-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);adminLog('Ekspor cadangan pengaturan');}
+  function adminImportData(event){if(!adminRequire())return;const file=event.target.files?.[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);if(typeof d!=='object'||!d)throw Error('invalid');if(typeof d.notice==='string')localStorage.setItem('xyro_admin_notice',d.notice.slice(0,1000));if(typeof d.maintenance==='boolean')localStorage.setItem('xyro_maintenance',d.maintenance?'1':'0');if(typeof d.siteName==='string'&&d.siteName.trim())localStorage.setItem('xyro_site_name',d.siteName.slice(0,40));if(['light','dark'].includes(d.theme)){localStorage.setItem('xyro_admin_theme',d.theme);document.body.classList.toggle('admin-light-theme',d.theme==='light');}adminLog('Pengaturan diimpor dari cadangan');renderAdminPanel();alert('Cadangan pengaturan berhasil diimpor. Akun pengguna tidak diimpor demi keamanan.');}catch(e){alert('File JSON tidak valid atau format tidak didukung.');}event.target.value='';};reader.readAsText(file);}
+  function adminClearActivity(){if(!adminRequire()||!confirm('Bersihkan semua riwayat aktivitas?'))return;localStorage.removeItem('xyro_admin_activity');adminLog('Riwayat aktivitas dibersihkan');renderAdminPanel();}
+  function adminResetLocalSettings(){if(!adminRequire()||!confirm('Reset pengumuman, maintenance, nama website, dan tema? Akun tidak akan dihapus.'))return;['xyro_admin_notice','xyro_maintenance','xyro_site_name','xyro_admin_theme'].forEach(k=>localStorage.removeItem(k));document.body.classList.remove('admin-light-theme');adminLog('Pengaturan lokal direset');renderAdminPanel();}
+  if(localStorage.getItem('xyro_admin_theme')==='light')document.body.classList.add('admin-light-theme');
+
+  /* ============ TOOLS ============ */
+  const BASE = 'https://api.synoxcloud.xyz';
+  const KEY = 'hanzsecretkey';
+
+  const TOOL_DEFS = {
+    web2zip: { title: '🌐 Web to ZIP', desc: 'Convert website jadi ZIP',
+      fields: [{ id: 'url', label: 'URL Website', placeholder: 'https://example.com' }],
+      build: (v) => `${BASE}/tools/web2zip?apikey=${KEY}&url=${encodeURIComponent(v.url)}` },
+
+    tiktok: { title: '🎵 TikTok Downloader', desc: 'Download video TikTok',
+      fields: [{ id: 'url', label: 'URL TikTok', placeholder: 'https://vt.tiktok.com/xxxx/' }],
+      build: (v) => `${BASE}/download/tiktok?apikey=${KEY}&url=${encodeURIComponent(v.url)}` },
+
+    youtube: { title: '▶️ YouTube Downloader', desc: 'Download video/audio YouTube',
+      fields: [{ id: 'url', label: 'URL YouTube', placeholder: 'https://youtu.be/xxxx' }],
+      build: (v) => `${BASE}/download/youtube?apikey=${KEY}&url=${encodeURIComponent(v.url)}` },
+
+    spotify: { title: '🎧 Spotify Downloader', desc: 'Download lagu Spotify',
+      fields: [{ id: 'url', label: 'URL Spotify', placeholder: 'https://open.spotify.com/track/xxxx' }],
+      build: (v) => `${BASE}/download/spotify?apikey=${KEY}&url=${encodeURIComponent(v.url)}` },
+
+    cuaca: { title: '🌤️ Cuaca', desc: 'Info cuaca kota',
+      fields: [{ id: 'city', label: 'Nama Kota', placeholder: 'Jakarta' }],
+      build: (v) => `${BASE}/tools/cuaca?apikey=${KEY}&city=${encodeURIComponent(v.city)}` },
+
+    meme: { title: '😂 Random Meme', desc: 'Meme random tiap klik',
+      fields: [], build: () => `${BASE}/random/meme?apikey=${KEY}` },
+
+    fakedev: { title: '👨‍💻 FakeDev', desc: 'Buat kartu profil developer untuk meme/parodi',
+      fields: [
+        { id: 'urlfoto', label: 'URL Foto', placeholder: 'https://example.com/foto.jpg' },
+        { id: 'teks', label: 'Nama/Teks', placeholder: 'Lordsaurus' }
+      ],
+      build: (v) => `${BASE}/canvas/fakedev-2?urlfoto=${encodeURIComponent(v.urlfoto)}&teks=${encodeURIComponent(v.teks)}&apikey=${KEY}` },
+
+    iqc: { title: '📱 IQC', desc: 'Buat tampilan chat IQC',
+      fields: [
+        { id: 'text', label: 'Teks', placeholder: 'Halo! Namaku saurus 🤪' },
+        { id: 'time', label: 'Waktu', placeholder: '09:41' },
+        { id: 'baterai', label: 'Baterai (%)', placeholder: '80' },
+        { id: 'operator', label: 'Operator', placeholder: 'tampilkan' },
+        { id: 'wifi', label: 'WiFi', placeholder: 'tampilkan' }
+      ],
+      build: (v) => `${BASE}/canvas/iqc?text=${encodeURIComponent(v.text)}&time=${encodeURIComponent(v.time)}&baterai=${encodeURIComponent(v.baterai)}&operator=${encodeURIComponent(v.operator)}&wifi=${encodeURIComponent(v.wifi)}&apikey=FREE` },
+
+    jarvismeme: { title: '🤖 Jarvis Meme', desc: 'Buat meme percakapan Jarvis',
+      fields: [{ id: 'text', label: 'Teks', placeholder: 'jarvis tolong itu anunya di anu anukan' }],
+      build: (v) => `${BASE}/canvas/jarvis-meme?text=${encodeURIComponent(v.text)}&apikey=FREE` },
+
+    pakustadz: { title: '🕌 Pak Ustadz', desc: 'Buat meme percakapan Pak Ustadz',
+      fields: [{ id: 'teks', label: 'Teks', placeholder: 'Pak ustad, apa hukumnya menyukai anime' }],
+      build: (v) => `${BASE}/canvas/pakustadz?teks=${encodeURIComponent(v.teks)}&apikey=${KEY}` },
+
+    fakeml: { title: '🎮 FakeML', desc: 'Buat kartu profil game untuk meme/parodi',
+      fields: [
+        { id: 'avatar', label: 'URL Avatar', placeholder: 'https://example.com/avatar.jpg' },
+        { id: 'username', label: 'Username', placeholder: 'Saurus' },
+        { id: 'rank', label: 'Rank', placeholder: 'imo' },
+        { id: 'border', label: 'Border', placeholder: '16' }
+      ],
+      build: (v) => `${BASE}/canvas/fakeml?avatar=${encodeURIComponent(v.avatar)}&username=${encodeURIComponent(v.username)}&rank=${encodeURIComponent(v.rank)}&border=${encodeURIComponent(v.border)}&apikey=${KEY}` },
+
+    fakeff: { title: '🔥 FakeFF', desc: 'Buat kartu lobby game untuk meme/parodi',
+      fields: [
+        { id: 'username', label: 'Username', placeholder: 'Saurus' },
+        { id: 'lobby', label: 'Lobby', placeholder: '30' }
+      ],
+      build: (v) => `${BASE}/canvas/fakeff?username=${encodeURIComponent(v.username)}&lobby=${encodeURIComponent(v.lobby)}&apikey=${KEY}` },
+
+    windowsquoted: { title: '🪟 Windows Quoted', desc: 'Buat meme quote bergaya Windows',
+      fields: [{ id: 'text', label: 'Teks', placeholder: 'ngapain cemburu kan cuman sebatas teman' }],
+      build: (v) => `${BASE}/canvas/windows-quoted?text=${encodeURIComponent(v.text)}&apikey=${KEY}` },
+
+    wasted: { title: '💥 Wasted', desc: 'Tambahkan efek Wasted untuk meme',
+      fields: [{ id: 'url', label: 'URL Foto', placeholder: 'https://example.com/foto.jpg' }],
+      build: (v) => `${BASE}/canvas/wasted?url=${encodeURIComponent(v.url)}&apikey=${KEY}` },
+
+    wanted: { title: '🎯 Wanted', desc: 'Buat poster Wanted untuk meme',
+      fields: [{ id: 'image', label: 'URL Foto', placeholder: 'https://example.com/foto.jpg' }],
+      build: (v) => `${BASE}/canvas/wanted?image=${encodeURIComponent(v.image)}&apikey=${KEY}` },
+
+    sudahsaatnya: { title: '⏰ Sudah Saatnya', desc: 'Buat meme teks',
+      fields: [{ id: 'text', label: 'Teks', placeholder: 'sudah saatnya aku berubah' }],
+      build: (v) => `${BASE}/canvas/sudahsaatnya?text=${encodeURIComponent(v.text)}&apikey=${KEY}` },
+
+    amsend: { title: '📧 AM — Send Email Link', desc: 'Kirim link verifikasi ke gmail',
+      note: '📨 Masukin <b>email Alight Motion</b> kamu. Link verifikasi bakal dikirim ke gmail. Copy link-nya, terus pakai di menu <b>AM — Verify & Activate</b>.',
+      fields: [{ id: 'email', label: 'Email Alight Motion', placeholder: 'user@gmail.com' }],
+      build: (v) => `${BASE}/premium/amsendoob?apikey=${KEY}&email=${encodeURIComponent(v.email)}` },
+
+    amverify: { title: '🎬 AM — Verify & Activate', desc: 'Aktivasi pakai oobCode dari email',
+      note: '🔗 Tempel <b>link oobCode</b> yang kamu terima di gmail (dari step Send Email Link). Link bentuknya kaya <code>https://alightcreative.com/?oobCode=xxxxx</code>.',
+      fields: [
+        { id: 'email', label: 'Email Alight Motion', placeholder: 'user@gmail.com' },
+        { id: 'link', label: 'Link Verifikasi (oobCode)', placeholder: 'https://alightcreative.com/?oobCode=xxxxx' }
+      ],
+      build: (v) => `${BASE}/premium/amverify?apikey=${KEY}&email=${encodeURIComponent(v.email)}&link=${encodeURIComponent(v.link)}` }
+          if (nested) {
+        actionLink = nested;
+        try {
+          const nestedUrl = new URL(nested);
+          oobCode = nestedUrl.searchParams.get('oobCode') || '';
+        } catch (_) {}
+      }
+      } catch (_) {}
+
+      if (!oobCode) {
+        try {
+          const actionUrl = new URL(actionLink);
+          oobCode = actionUrl.searchParams.get('oobCode') || '';
+        } catch (_) {}
+      }
+
+      if (!oobCode) {
+        const match = decoded.match(/[?&]oobCode=([^&#]+)/i);
+        if (match) {
+          try { oobCode = decodeURIComponent(match[1]); }
+          catch (_) { oobCode = match[1]; }
+        }
+      }
+
+      if (oobCode) {
+        values.link = oobCode;
+      } else {
+        alert('oobCode tidak ditemukan. Pastikan link verifikasi yang ditempel benar.');
+        return;
+      }
+    }
+
+    const btn = document.getElementById('toolRunBtn');
+    btn.disabled = true;
+    btn.textContent = 'Memproses...';
+    const result = document.getElementById('toolResult');
+    result.textContent = 'Sedang menghubungi API...';
+
+    try {
+      const url = def.build(values);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status);
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+
+      if (IMAGE_TOOLS.has(currentTool)) {
+        let imageUrl = '';
+        let blob = null;
+
+        if (contentType.startsWith('image/')) {
+          blob = await response.blob();
+          imageUrl = URL.createObjectURL(blob);
+        } else {
+          const data = await response.json();
+          imageUrl = data.url || data.image || data.result || data.data || '';
+
+          if (typeof imageUrl !== 'string') {
+            imageUrl = '';
+          }
+        }
+
+        if (!imageUrl) {
+          throw new Error('API tidak mengembalikan URL gambar yang valid.');
+        }
+
+        result.innerHTML = `
+          <div class="result-image-wrap">
+            <img src="${escapeAdminText(imageUrl)}" alt="Hasil gambar"
+              class="result-image"
+              onerror="this.alt='Gambar gagal dimuat';this.style.display='none';">
+            <a class="btn-run" href="${escapeAdminText(imageUrl)}"
+              download="xyroplay-image.png" target="_blank" rel="noopener">
+              💾 Simpan Gambar
+            </a>
+          </div>`;
+      } else if (contentType.includes('application/json')) {
+        const data = await response.json();
+        result.textContent = JSON.stringify(data, null, 2);
+      } else {
+        const textData = await response.text();
+        result.textContent = textData;
+      }
+    } catch (err) {
+      result.textContent = 'Terjadi kesalahan: ' + err.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Proses 🚀';
+    }
+  }
+        if (nested) {
+        actionLink = nested;
+        try {
+          const nestedUrl = new URL(nested);
+          oobCode = nestedUrl.searchParams.get('oobCode') || '';
+        } catch (_) {}
+      }
+      } catch (_) {}
+
+      if (!oobCode) {
+        try {
+          const actionUrl = new URL(actionLink);
+          oobCode = actionUrl.searchParams.get('oobCode') || '';
+        } catch (_) {}
+      }
+
+      if (!oobCode) {
+        const match = decoded.match(/[?&]oobCode=([^&#]+)/i);
+        if (match) {
+          try { oobCode = decodeURIComponent(match[1]); }
+          catch (_) { oobCode = match[1]; }
+        }
+      }
+
+      if (oobCode) {
+        values.link = oobCode;
+      } else {
+        alert('oobCode tidak ditemukan. Pastikan link verifikasi yang ditempel benar.');
+        return;
+      }
+    }
+
+    const btn = document.getElementById('toolRunBtn');
+    btn.disabled = true;
+    btn.textContent = 'Memproses...';
+    const result = document.getElementById('toolResult');
+    result.textContent = 'Sedang menghubungi API...';
+
+    try {
+      const url = def.build(values);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status);
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+
+      if (IMAGE_TOOLS.has(currentTool)) {
+        let imageUrl = '';
+        let blob = null;
+
+        if (contentType.startsWith('image/')) {
+          blob = await response.blob();
+          imageUrl = URL.createObjectURL(blob);
+        } else {
+          const data = await response.json();
+          imageUrl = data.url || data.image || data.result || data.data || '';
+
+          if (typeof imageUrl !== 'string') {
+            imageUrl = '';
+          }
+        }
+
+        if (!imageUrl) {
+          throw new Error('API tidak mengembalikan URL gambar yang valid.');
+        }
+
+        result.innerHTML = `
+          <div class="result-image-wrap">
+            <img src="${escapeAdminText(imageUrl)}" alt="Hasil gambar"
+              class="result-image"
+              onerror="this.alt='Gambar gagal dimuat';this.style.display='none';">
+            <a class="btn-run" href="${escapeAdminText(imageUrl)}"
+              download="xyroplay-image.png" target="_blank" rel="noopener">
+              💾 Simpan Gambar
+            </a>
+          </div>`;
+      } else if (contentType.includes('application/json')) {
+        const data = await response.json();
+        result.textContent = JSON.stringify(data, null, 2);
+      } else {
+        const textData = await response.text();
+        result.textContent = textData;
+      }
+    } catch (err) {
+      result.textContent = 'Terjadi kesalahan: ' + err.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Proses 🚀';
+    }
+  }
+          } catch (_) {
+          break;
+        }
+      }
+
+      // Coba ambil link aksi Firebase dari parameter `link`.
+      try {
+        const outerUrl = new URL(decoded);
+        const nested = outerUrl.searchParams.get('link');
+        if (nested) {
+          actionLink = nested;
+          try {
+            const nestedUrl = new URL(nested);
+            oobCode = nestedUrl.searchParams.get('oobCode') || '';
+          } catch (_) {}
+        }
+      } catch (_) {}
+
+      if (!oobCode) {
+        try {
+          const actionUrl = new URL(actionLink);
+          oobCode = actionUrl.searchParams.get('oobCode') || '';
+        } catch (_) {}
+      }
+
+      if (!oobCode) {
+        const match = decoded.match(/[?&]oobCode=([^&#]+)/i);
+        if (match) {
+          try { oobCode = decodeURIComponent(match[1]); }
+          catch (_) { oobCode = match[1]; }
+        }
+      }
+
+      if (oobCode) {
+        values.link = oobCode;
+      } else {
+        alert('oobCode tidak ditemukan. Pastikan link verifikasi yang ditempel benar.');
+        return;
+      }
+    }
+
+    const btn = document.getElementById('toolRunBtn');
+    btn.disabled = true;
+    btn.textContent = 'Memproses...';
+    const result = document.getElementById('toolResult');
+    result.textContent = 'Sedang menghubungi API...';
+
+    try {
+      const url = def.build(values);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status);
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+
+      if (IMAGE_TOOLS.has(currentTool)) {
+        let imageUrl = '';
+
+        if (contentType.startsWith('image/')) {
+          const blob = await response.blob();
+          imageUrl = URL.createObjectURL(blob);
+        } else {
+          const data = await response.json();
+          imageUrl = data.url || data.image || data.result || data.data || '';
+
+          if (typeof imageUrl !== 'string') {
+            imageUrl = '';
+          }
+        }
+
+        if (!imageUrl) {
+          throw new Error('API tidak mengembalikan URL gambar yang valid.');
+        }
+
+        result.innerHTML = `
+          <div class="result-image-wrap">
+            <img src="${escapeAdminText(imageUrl)}" alt="Hasil gambar"
+              class="result-image"
+              onerror="this.alt='Gambar gagal dimuat';this.style.display='none';">
+            <a class="btn-run" href="${escapeAdminText(imageUrl)}"
+              download="xyroplay-image.png" target="_blank" rel="noopener">
+              💾 Simpan Gambar
+            </a>
+          </div>`;
+      } else if (contentType.includes('application/json')) {
+        const data = await response.json();
+        result.textContent = JSON.stringify(data, null, 2);
+      } else {
+        const textData = await response.text();
+        result.textContent = textData;
+      }
+    } catch (err) {
+      result.textContent = 'Terjadi kesalahan: ' + err.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Proses 🚀';
+    }
+  }
+        alert('Download gambar dimulai. Cek folder Download di perangkat kamu.');
+    } catch (err) {
+      alert('Gagal menyimpan gambar: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+
+  function mimeToExt(mime) {
+    const m = (mime || '').toLowerCase().split(';')[0].trim();
+    const map = {
+      'image/jpeg': 'jpg',
+      'image/jpg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+      'image/bmp': 'bmp',
+      'image/svg+xml': 'svg'
+    };
+    return map[m] || 'png';
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[c]));
+  }
+
+  function renderLinksIfAny(data, container) {
+    const urls = extractHttpUrls(data);
+    if (!urls.length) return;
+
+    const links = urls.map((url, index) => `
+      <div class="img-action-row">
+        <a class="btn-open" href="${escapeHtml(url)}"
+          target="_blank" rel="noopener">
+          🔗 Buka Link ${index + 1}
+        </a>
+      </div>
+    `).join('');
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = links;
+    container.appendChild(wrapper);
+  }
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
+
+      btn.textContent = '✅ Gambar Tersimpan';
+      setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1800);
+    } catch (err) {
+      // Fallback bila browser menolak fetch/download blob.
+      try {
+        const link = document.createElement('a');
+        link.href = lastImageUrl;
+        link.download = 'xyroplay_' + Date.now() + '.' + mimeToExt(lastImageMime);
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        btn.textContent = '✅ Gambar Tersimpan';
+        setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1800);
+      } catch (fallbackErr) {
+        alert('❌ Gagal simpan gambar: ' + err.message);
+        btn.textContent = original;
+        btn.disabled = false;
+      }
+    }
+  }
+
+  function mimeToExt(mime) {
+    if (!mime) return 'png';
+    if (mime.includes('jpeg') || mime.includes('jpg')) return 'jpg';
+    if (mime.includes('png')) return 'png';
+    if (mime.includes('webp')) return 'webp';
+    if (mime.includes('gif')) return 'gif';
+    return 'png';
+  }
+
+  function renderLinksIfAny(data, container) {
+    const found = [];
+    function walk(obj) {
+      if (!obj) return;
+      if (typeof obj === 'string') {
+        if (/^https?:\/\//.test(obj) && /\.(mp4|mp3|jpg|jpeg|png|zip|webm|m4a|gif|webp)/i.test(obj)) found.push(obj);
+      } else if (typeof obj === 'object') {
+        for (const k in obj) walk(obj[k]);
+      }
+    }
+    walk(data);
+    if (found.length) {
+      const images = found.filter(l => /\.(jpg|jpeg|png|gif|webp)/i.test(l));
+      const others = found.filter(l => !/\.(jpg|jpeg|png|gif|webp)/i.test(l));
+      let html = '';
+      if (images.length) html += images.map(l => `<img src="${l}" alt="preview" onerror="this.style.display='none'">`).join('');
+      if (others.length) html += others.map(l => `<a href="${l}" target="_blank">🔗 ${l}</a>`).join('<br>');
+      if (html) container.innerHTML += `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(180,0,255,0.3)">${html}</div>`;
+    }
+  }
+
+
+  /* ============ TOOLS SEARCH & FILTER ============ */
+  (function initToolsUI(){
+    const search = document.getElementById('toolSearch');
+    const clear = document.getElementById('clearToolSearch');
+    const count = document.getElementById('toolsCount');
+    const empty = document.getElementById('toolsEmpty');
+    const grid = document.getElementById('toolsGrid');
+    const filters = document.querySelectorAll('#toolsFilter button');
+    if (!search || !grid) return;
+
+    let activeFilter = 'all';
+    const cards = [...grid.querySelectorAll('.tool-card')];
+
+    function applyToolsFilter(){
+      const q = search.value.trim().toLowerCase();
+      let visible = 0;
+      cards.forEach(card => {
+        const category = card.dataset.category || 'other';
+        const haystack = (card.dataset.search || '').toLowerCase();
+        const matchFilter = activeFilter === 'all' || category === activeFilter;
+        const matchSearch = !q || haystack.includes(q);
+        const show = matchFilter && matchSearch;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      count.textContent = `${visible} Tool${visible === 1 ? '' : 's'}`;
+      empty.style.display = visible ? 'none' : 'block';
+      clear.style.display = search.value ? 'flex' : 'none';
+    }
+
+    filters.forEach(btn => btn.addEventListener('click', () => {
+      filters.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter || 'all';
+      applyToolsFilter();
+    }));
+    search.addEventListener('input', applyToolsFilter);
+    clear.addEventListener('click', () => {
+      search.value = '';
+      search.focus();
+      applyToolsFilter();
+    });
+    applyToolsFilter();
+  })();
+
+  /* ============ AI ============ */
+  const AI_DEFS = { novaai: { title: '✨ Nova AI', desc: 'Chat AI serba bisa', endpoint: 'novaai' } };
+  let currentAI = null;
+
+  function openAI(key) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-ai-worker').classList.add('active');
+    navHistory.push('ai-worker');
+    currentAI = key;
+    const def = AI_DEFS[key];
+    document.getElementById('aiTitle').textContent = def.title;
+    document.getElementById('aiDesc').textContent = def.desc;
+    document.getElementById('aiResult').textContent = 'Balasan akan muncul di sini...';
+    document.getElementById('content').scrollTop = 0;
+  }
+
+  async function sendAIChat() {
+    if (!currentAI) return;
+    const input = document.getElementById('aiInput').value.trim();
+    const out = document.getElementById('aiResult');
+    const btn = document.getElementById('aiSendBtn');
+    if (!input) { alert('Tulis pesan dulu!'); return; }
+    btn.disabled = true;
+    out.innerHTML = '<span class="loading">⏳ Lagi mikir...</span>';
+    try {
+      const res = await fetch(`${BASE}/ai-chat/${AI_DEFS[currentAI].endpoint}?apikey=${KEY}&text=${encodeURIComponent(input)}`);
+      const data = await res.json();
+      let reply = '❓ Nggak ada balasan.';
+      if (data && data.result) {
+        reply = typeof data.result === 'string' ? data.result : (data.result.reply || JSON.stringify(data.result));
+      } else if (data) reply = JSON.stringify(data);
+      out.innerHTML = `<b style="color:#00e5ff">Kamu:</b> ${escapeHtml(input)}\n\n<b style="color:#c800ff">AI:</b> ${escapeHtml(reply)}`;
+    } catch (err) {
+      out.textContent = '❌ Error: ' + err.message;
+    } finally { btn.disabled = false; }
+  }
+
+  /* ============ UTIL ============ */
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      if (document.activeElement.id === 'aiInput') { e.preventDefault(); sendAIChat(); }
+    }
+  });
+</script>
+
+<style id="xyroplay-spotify-search-style">
+#spotifySearchOpen{position:fixed;top:12px;right:12px;z-index:99999;width:46px;height:46px;display:none;align-items:center;justify-content:center;border-radius:15px;border:1px solid rgba(200,0,255,.7);background:linear-gradient(135deg,#7a00ff,#c800ff);color:white;font-size:25px;box-shadow:0 8px 24px rgba(120,0,255,.5);cursor:pointer;visibility:visible!important;opacity:1!important}
+#spotifySearchModal{position:fixed;inset:0;z-index:1500;display:none;align-items:flex-start;justify-content:center;padding: max(18px,env(safe-area-inset-top)) 14px 20px;background:rgba(0,0,0,.78);backdrop-filter:blur(12px);overflow-y:auto}
+#spotifySearchModal.open{display:flex}
+.spotify-panel{width:100%;max-width:520px;margin-top:38px;border:1px solid rgba(180,0,255,.35);border-radius:22px;padding:18px;background:linear-gradient(145deg,#180025,#09000f);box-shadow:0 20px 70px #000}
+.spotify-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.spotify-panel-head h2{font-size:19px;background:linear-gradient(90deg,#c800ff,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#spotifySearchClose{width:36px;height:36px;border-radius:11px;border:1px solid #493052;background:#21102a;color:#fff;font-size:20px}
+.spotify-search-form{display:flex;gap:8px}
+#spotifyQuery{flex:1;min-width:0;height:46px;padding:0 13px;border-radius:13px;border:1px solid #49245b;background:#08050b;color:#fff;outline:none;font-size:14px}
+#spotifyQuery:focus{border-color:#c800ff}
+#spotifySearchSubmit{padding:0 15px;border:0;border-radius:13px;background:linear-gradient(90deg,#7a00ff,#c800ff);color:#fff;font-weight:700}
+#spotifySearchStatus{font-size:12px;color:#a99cc0;margin:13px 2px}
+#spotifySearchResults{display:flex;flex-direction:column;gap:9px}
+.spotify-result{display:flex;align-items:center;gap:11px;padding:10px;border:1px solid rgba(180,0,255,.22);background:rgba(255,255,255,.035);border-radius:14px;min-width:0}
+.spotify-result img{width:58px;height:58px;flex:0 0 58px;object-fit:cover;border-radius:10px;background:#21102a}
+.spotify-result-info{flex:1;min-width:0}
+.spotify-result-title{font-size:13px;font-weight:800;color:#fff;overflow-wrap:anywhere}
+.spotify-result-meta{font-size:11px;color:#a99cc0;margin-top:4px;overflow-wrap:anywhere}
+.spotify-result a{display:inline-block;margin-top:7px;color:#00e5ff;font-size:11px;text-decoration:none}
+@media(max-width:420px){#spotifySearchOpen{top:10px;right:10px}.spotify-panel{padding:14px}.spotify-result img{width:50px;height:50px;flex-basis:50px}}
+</style>
+<button id="spotifySearchOpen" type="button" aria-label="Cari lagu Spotify" title="Cari lagu Spotify">⌕</button>
+<div id="spotifySearchModal" role="dialog" aria-modal="true" aria-label="Pencarian lagu Spotify">
+  <section class="spotify-panel">
+    <div class="spotify-panel-head"><h2>♫ Cari Lagu Spotify</h2><button id="spotifySearchClose" type="button" aria-label="Tutup">×</button></div>
+    <form class="spotify-search-form" id="spotifySearchForm">
+      <input id="spotifyQuery" type="search" placeholder="Cari judul lagu atau artis..." autocomplete="off" required>
+      <button id="spotifySearchSubmit" type="submit">Cari</button>
+    </form>
+    <div id="spotifySearchStatus">Ketik judul lagu atau nama artis untuk mulai mencari.</div>
+    <div id="spotifySearchResults"></div>
+  </section>
+</div>
+<script id="xyroplay-spotify-search-script">
+(function(){
+ const openBtn=document.getElementById('spotifySearchOpen');
+ const modal=document.getElementById('spotifySearchModal');
+ const closeBtn=document.getElementById('spotifySearchClose');
+ const form=document.getElementById('spotifySearchForm');
+ const queryInput=document.getElementById('spotifyQuery');
+ const submitBtn=document.getElementById('spotifySearchSubmit');
+ const status=document.getElementById('spotifySearchStatus');
+ const results=document.getElementById('spotifySearchResults');
+ openBtn.style.display='none';
+ function openSearch(){modal.classList.add('open');openBtn.style.display='none';setTimeout(()=>queryInput.focus(),100)}
+ function closeSearch(){modal.classList.remove('open');openBtn.style.display=(document.getElementById('app')&&getComputedStyle(document.getElementById('app')).display!=='none')?'flex':'none'}
+ openBtn.addEventListener('click',openSearch);
+ closeBtn.addEventListener('click',closeSearch);
+ modal.addEventListener('click',e=>{if(e.target===modal)closeSearch()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeSearch()});
+ function pick(obj,keys){for(const k of keys){if(obj&&obj[k]!=null&&obj[k]!=='')return obj[k]}return ''}
+ function imageFor(item){let v=pick(item,['thumbnail','image','cover','album_image','imageUrl','artwork']);if(Array.isArray(v))v=v[0];if(v&&typeof v==='object')v=pick(v,['url','src']);if(!v&&item.album&&typeof item.album==='object'){v=pick(item.album,['image','cover','thumbnail']);if(Array.isArray(v))v=v[0];if(v&&typeof v==='object')v=pick(v,['url','src'])}return typeof v==='string'?v:''}
+ function normalize(data){
+   let arr=Array.isArray(data)?data:null;
+   if(!arr&&data&&typeof data==='object'){
+     for(const k of ['result','results','data','tracks','items']){const v=data[k];if(Array.isArray(v)){arr=v;break}if(v&&typeof v==='object'){for(const kk of ['result','results','tracks','items'])if(Array.isArray(v[kk])){arr=v[kk];break}}if(arr)break}
+   }
+   return arr||[];
+ }
+ function render(items){
+   results.innerHTML='';
+   if(!items.length){status.textContent='Lagu tidak ditemukan. Coba kata kunci lain.';return}
+   status.textContent='Ditemukan '+items.length+' hasil.';
+   items.forEach(item=>{
+     if(!item||typeof item!=='object')return;
+     const title=pick(item,['name','title','track_name','trackName'])||'Lagu tanpa judul';
+     let artists=pick(item,['artist','artists','artist_name','artists_names']);
+     if(Array.isArray(artists))artists=artists.map(a=>typeof a==='string'?a:pick(a,['name','title'])).filter(Boolean).join(', ');
+     if(artists&&typeof artists==='object')artists=pick(artists,['name','title']);
+     const album=pick(item,['album_name','albumName'])||(item.album&&typeof item.album==='object'?pick(item.album,['name','title']):'');
+     const url=pick(item,['spotify_url','spotifyUrl','external_url','externalUrl','url','link']);
+     const image=imageFor(item);
+     // Prefer a playable full/stream URL if the API provides one; otherwise use Spotify preview.
+     const preview=pick(item,['audio_url','audioUrl','stream_url','streamUrl','preview_url','previewUrl','preview']);
+     const card=document.createElement('article');card.className='spotify-result';
+     const img=document.createElement('img');img.alt='Cover '+title;img.loading='lazy';img.src=image||'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22%3E%3Crect width=%2260%22 height=%2260%22 fill=%22%2321102a%22/%3E%3Ctext x=%2230%22 y=%2238%22 font-size=%2228%22 text-anchor=%22middle%22 fill=%22%23c800ff%22%3E♫%3C/text%3E%3C/svg%3E';
+     img.onerror=()=>{img.style.visibility='hidden'};
+     const info=document.createElement('div');info.className='spotify-result-info';
+     const name=document.createElement('div');name.className='spotify-result-title';name.textContent=title;
+     const meta=document.createElement('div');meta.className='spotify-result-meta';meta.textContent=[artists,album].filter(Boolean).join(' · ')||'Spotify track';
+     info.append(name,meta);
+     if(url&&/^https?:\/\//i.test(url)){const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Buka di Spotify ↗';info.appendChild(a)}
+     if(typeof preview==='string'&&/^https?:\/\//i.test(preview)){
+       const audio=document.createElement('audio');audio.controls=true;audio.preload='metadata';audio.src=preview;audio.style.cssText='display:block;width:100%;height:36px;margin-top:7px';
+       // Allow up to 60 seconds of playback when the source contains that much audio.
+       let stopTimer=null;
+       audio.addEventListener('play',()=>{if(stopTimer)clearTimeout(stopTimer);stopTimer=setTimeout(()=>{audio.pause();audio.currentTime=Math.min(audio.currentTime,60)},60000)});
+       audio.addEventListener('pause',()=>{if(stopTimer){clearTimeout(stopTimer);stopTimer=null}});
+       audio.addEventListener('ended',()=>{if(stopTimer){clearTimeout(stopTimer);stopTimer=null}});
+       info.appendChild(audio);
+       const note=document.createElement('div');note.className='spotify-result-meta';note.textContent='Maksimal pemutaran 1 menit jika sumber audio mendukung.';info.appendChild(note);
+     }
+     card.append(img,info);results.appendChild(card);
+   });
+ }
+ form.addEventListener('submit',async e=>{
+   e.preventDefault();const q=queryInput.value.trim();if(!q)return;
+   submitBtn.disabled=true;submitBtn.textContent='...';status.textContent='Sedang mencari lagu...';results.innerHTML='';
+   try{
+     const endpoint='https://api.synoxcloud.xyz/search/searchspotify?q='+encodeURIComponent(q)+'&limit=10&apikey=hanzsecretkey';
+     const response=await fetch(endpoint,{method:'GET',headers:{'Accept':'application/json'}});
+     if(!response.ok)throw new Error('Server mengembalikan status '+response.status);
+     const data=await response.json();const items=normalize(data);render(items);
+     if(!items.length&&data&&data.message)status.textContent=String(data.message);
+   }catch(err){status.textContent='Gagal mencari lagu. Periksa koneksi atau CORS API, lalu coba lagi.';console.error('Spotify search:',err)}
+   finally{submitBtn.disabled=false;submitBtn.textContent='Cari'}
+ });
+ // Tombol dibuat selalu terlihat agar tetap muncul di WebView/HP.
+ openBtn.style.display='flex';
+})();
+</script>
+
+<style id="xyroplay-dashboard-polish">
+/* Dashboard-only visual polish: keeps existing pages, actions and scripts intact. */
+#page-home{--dash-border:rgba(194,72,255,.24);--dash-muted:#a99dbb;}
+#page-home .hero-banner{height:clamp(230px,43vw,290px);min-height:230px;margin-bottom:18px;border-radius:24px;border-color:rgba(199,64,255,.42);box-shadow:0 12px 36px rgba(128,0,190,.16),inset 0 0 35px rgba(0,0,0,.3)}
+#page-home .hero-banner>img{object-position:center;filter:brightness(.62) saturate(1.12);}
+#page-home .hero-banner::after{background:linear-gradient(180deg,rgba(10,0,20,.08) 0%,rgba(10,0,20,.1) 35%,rgba(10,0,20,.92) 100%)}
+#page-home #xyroplay-video-banner{margin:0 12px 18px!important;border-radius:18px!important;border-color:rgba(196,83,255,.3)!important;box-shadow:0 8px 28px rgba(130,0,200,.12)!important}
+#page-home #xyroplay-video-banner video{height:clamp(155px,45vw,220px)!important;object-position:center}
+#page-home .user-card-v2{padding:18px;border-radius:22px;border:1px solid var(--dash-border);background:linear-gradient(125deg,rgba(38,8,58,.96),rgba(13,7,25,.98));box-shadow:0 8px 26px rgba(0,0,0,.15);gap:15px;margin-bottom:16px}
+#page-home .user-avatar-v2{box-shadow:0 7px 22px rgba(126,0,255,.25);border:1px solid rgba(255,255,255,.12)}
+#page-home .user-info-v2 h3{font-size:17px;letter-spacing:.1px}
+#page-home .greeting-card{padding:20px;border-radius:22px;border:1px solid rgba(188,53,255,.25);background:radial-gradient(circle at 100% 0%,rgba(148,0,255,.18),transparent 45%),linear-gradient(130deg,#170622,#100b20 72%,#211039);box-shadow:0 8px 24px rgba(0,0,0,.12);margin-bottom:23px}
+#page-home .greeting-card h2{font-size:clamp(19px,5vw,25px);margin-bottom:8px;letter-spacing:-.35px}
+#page-home .greeting-card p{font-size:13px;line-height:1.65;color:#b9adc9}
+#page-home .sec-title{display:flex;align-items:center;gap:10px;margin:23px 0 13px;font-size:12px;letter-spacing:2px;color:#c7bad8;font-weight:800;text-transform:uppercase}
+#page-home .sec-title::before{content:"";display:block;width:4px;height:18px;border-radius:9px;background:linear-gradient(180deg,#e85cff,#743dff);box-shadow:0 0 12px rgba(196,48,255,.45)}
+#page-home .stat-row{gap:10px;margin-bottom:8px}
+#page-home .stat-card{min-width:0;padding:16px 8px 14px;border-radius:19px;border:1px solid var(--dash-border);background:linear-gradient(155deg,rgba(29,7,43,.98),rgba(12,7,21,.98));box-shadow:inset 0 1px rgba(255,255,255,.025);transition:transform .2s,border-color .2s}
+#page-home .stat-card .emoji{font-size:25px;margin-bottom:7px}
+#page-home .stat-card .val{font-size:23px;font-weight:850;line-height:1.2}
+#page-home .stat-card .lbl{font-size:10px;letter-spacing:1.7px;color:#9384a5;margin-top:5px}
+#page-home .action-grid{gap:12px}
+#page-home .action-tile{position:relative;min-width:0;min-height:132px;padding:17px 16px;border-radius:22px;border:1px solid rgba(180,54,255,.25);background:linear-gradient(145deg,rgba(31,7,48,.98),rgba(13,8,24,.98));box-shadow:0 7px 22px rgba(0,0,0,.13);overflow:hidden;transition:transform .18s,border-color .18s,background .18s}
+#page-home .action-tile::after{content:"";position:absolute;width:100px;height:100px;right:-52px;bottom:-56px;border-radius:50%;background:rgba(160,0,255,.1);pointer-events:none}
+#page-home .action-tile:active{transform:scale(.985);border-color:rgba(213,93,255,.65)}
+#page-home .tile-emoji{display:block;font-size:27px;margin-bottom:10px}
+#page-home .tile-name{font-size:15px;font-weight:800;margin-bottom:4px;letter-spacing:-.1px}
+#page-home .tile-desc{font-size:12px;line-height:1.5;color:#a496b5}
+#page-home #spotifySearchOpen{top:calc(env(safe-area-inset-top) + 12px);right:12px}
+@media(min-width:600px){#app{max-width:760px}#page-home .action-tile{min-height:145px}#page-home .hero-banner{height:280px}}
+@media(max-width:380px){#content{padding:12px 12px 96px}#page-home .hero-banner{min-height:215px;height:215px;border-radius:20px}#page-home .greeting-card{padding:17px}#page-home .action-grid{gap:9px}#page-home .action-tile{padding:14px;min-height:118px;border-radius:18px}#page-home .stat-car
+                        @media(max-width:380px){
+  #content{padding:12px 12px 96px}
+  #page-home .hero-banner{min-height:215px;height:215px;border-radius:20px}
+  #page-home .greeting-card{padding:17px}
+  #page-home .action-grid{gap:9px}
+  #page-home .action-tile{padding:14px;min-height:118px;border-radius:18px}
+  #page-home .stat-card{padding:13px 5px}
+}
+@media(prefers-reduced-motion:reduce){
+  #page-home .action-tile,#page-home .stat-card{transition:none}
+}
+</style>
+
+<style id="xyroplay-admin-styles">
+#page-admin{padding-bottom:24px}
+.admin-warning{padding:12px;border:1px solid #e6b44d55;background:#e6b44d12;border-radius:12px;color:#e8c779;font-size:12px;line-height:1.5;margin:14px 0}
+.admin-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}
+.admin-stat,.admin-card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:15px;padding:14px;margin-bottom:12px}
+.admin-stat span{display:block;font-size:11px;opacity:.7}
+.admin-stat b{display:block;font-size:21px;margin-top:6px}
+.admin-card h3{font-size:15px;margin:0 0 12px}
+.admin-card textarea,.admin-card input{width:100%;box-sizing:border-box;background:rgba(0,0,0,.22);color:inherit;border:1px solid #ffffff22;border-radius:10px;padding:11px;margin-bottom:8px;font:inherit}
+.admin-inline{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.admin-preview{font-size:12px;opacity:.8;margin-top:10px;white-space:pre-wrap}
+.admin-users{margin-top:10px}
+.admin-user-row,.admin-setting{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #ffffff12;font-size:12px}
+.admin-user-row button{border:0;border-radius:8px;padding:7px 10px;color:white;background:#d94460}
+.admin-toggle{border:1px solid #ffffff22;background:#7b5cff22;color:inherit;padding:8px 10px;border-radius:9px;font-size:11px}
+.admin-activity-row{padding:9px 0;border-bottom:1px solid #ffffff12}
+.admin-activity-row b,.admin-activity-row small{display:block;font-size:12px}
+.admin-activity-row small{opacity:.6;margin-top:3px}
+.admin-light-theme{filter:none!important;background:#f5f6fc!important;color:#222!important}
+.admin-light-theme .admin-card,.admin-light-theme .admin-stat{background:#fff;border-color:#ddd}
+.admin-light-theme .admin-card input,.admin-light-theme .admin-card textarea{background:#f7f7fb;color:#222;border-color:#ddd}
+@media(max-width:380px){
+  .admin-inline{grid-template-columns:1fr}
+  .admin-stats{gap:5px}
+  .admin-stat{padding:10px}
+}
+
+/* XYROPLAY ADMIN CENTER - responsive layout */
+#page-admin{padding-bottom:28px}
+.admin-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.admin-live{font-size:10px;letter-spacing:1px;padding:7px 10px;border-radius:30px;background:rgba(34,197,94,.12);color:#6ee7a0;border:1px solid rgba(34,197,94,.25);white-space:nowrap}
+.admin-live i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:5px}
+.admin-warning{padding:12px 13px;border:1px solid #e6b44d44;background:#e6b44d10;border-radius:13px;color:#e8c779;font-size:11px;line-height:1.6;margin:12px 0}
+.admin-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0 20px}
+.admin-stat,.admin-card{background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.09);border-radius:17px;padding:14px;margin-bottom:12px;min-width:0}
+.admin-stat span{display:block;font-size:10px;opacity:.76}
+.admin-stat b{display:block;font-size:20px;margin-top:7px;overflow-wrap:anywhere}
+.admin-stat small{display:block;font-size:9px;opacity:.55;margin-top:4px}
+.admin-section-label{font-size:10px;font-weight:800;letter-spacing:1.5px;opacity:.52;margin:22px 3px 10px}
+.admin-card h3{font-size:14px;margin:0 0 5px}
+.admin-card p{font-size:11px;opacity:.62;line-height:1.5;margin:0 0 13px}
+.admin-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px}
+.admin-chip{font-size:10px;border:1px solid #ffffff20;background:#ffffff08;border-radius:20px;padding:5px 8px;white-space:nowrap}
+.admin-card textarea,.admin-card input:not([type=file]){width:100%;box-sizing:border-box;background:rgba(0,0,0,.2);color:inherit;border:1px solid #ffffff20;border-radius:11px;padding:12px;margin:0 0 9px;font:inherit;font-size:12px;outline:none}
+.admin-card textarea:focus,.admin-card input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px #a78bfa18}
+.admin-inline{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.admin-actions{display:flex;gap:8px;align-items:center}
+.admin-actions .btn-run{flex:1}
+.admin-preview{font-size:12px;opacity:.85;margin-top:12px;padding:10px;border-radius:10px;background:#ffffff08;white-space:pre-wrap;overflow-wrap:anywhere}
+.admin-users{margin-top:10px}
+.admin-user-row,.admin-setting{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #ffffff12;font-size:12px}
+.admin-user-row:last-child,.admin-setting:last-child{border-bottom:0}
+.admin-user-info{display:flex;align-items:center;gap:9px;min-width:0}
+.admin-user-info>span:last-child{min-width:0;overflow-wrap:anywhere}
+.admin-user-info b,.admin-user-info small,.admin-setting b,.admin-setting small{display:block}
+.admin-user-info small,.admin-setting small{font-size:10px;opacity:.55;margin-top:4px}
+.admin-avatar{width:31px;height:31px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;font-weight:800;flex-shrink:0}
+.admin-user-row button,.admin-danger-btn{border:1px solid #fb718544;border-radius:9px;padding:8px 11px;color:#fda4af;background:#fb718515;font-size:11px;flex-shrink:0}
+.admin-toggle{border:1px solid #ffffff22;background:#8b5cf622;color:inherit;padding:9px 11px;border-radius:10px;font-size:10px;white-space:nowrap}
+.admin-setting>div{min-width:0}
+.admin-activity-row{padding:11px 0;border-bottom:1px solid #ffffff12;overflow-wrap:anywhere}
+.admin-activity-row b,.admin-activity-row small{display:block;font-size:11px}
+.admin-activity-row small{opacity:.55;margin-top:4px}
+.admin-clear-log{margin-top:12px}
+.admin-empty{padding:14px;text-align:center;font-size:11px;opacity:.55}
+.admin-danger-card{border-color:#fb718533}
+.admin-danger-card h3{color:#fda4af}
+.admin-danger-btn{width:100%;padding:11px}
+.admin-light-theme #page-admin .admin-card,.admin-light-theme #page-admin .admin-stat{background:#fff;border-color:#e5e7eb;box-shadow:0 5px 18px #11111108}
+.admin-light-theme #page-admin .admin-card input:not([type=file]),.admin-light-theme #page-admin .admin-card textarea{background:#f8fafc;color:#222;border-color:#ddd}
+.admin-light-theme #page-admin .admin-preview,.admin-light-theme #page-admin .admin-chip{background:#f1f5f9;border-color:#e2e8f0}
+.admin-light-theme #page-admin .admin-user-row,.admin-light-theme #page-admin .admin-setting,.admin-light-theme #page-admin .admin-activity-row{border-color:#e5e7eb}
+@media(max-width:380px){
+  .admin-inline{grid-template-columns:1fr}
+  .admin-stats{gap:6px}
+  .admin-stat{padding:10px}
+  .admin-stat b{font-size:17px}
+  .admin-card{padding:12px}
+  .admin-heading{align-items:flex-start}
+}
+</style>
